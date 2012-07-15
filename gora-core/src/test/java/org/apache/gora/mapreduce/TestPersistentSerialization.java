@@ -24,9 +24,6 @@ import org.apache.avro.util.Utf8;
 import org.apache.gora.examples.WebPageDataCreator;
 import org.apache.gora.examples.generated.Employee;
 import org.apache.gora.examples.generated.WebPage;
-import org.apache.gora.mapreduce.PersistentDeserializer;
-import org.apache.gora.mapreduce.PersistentSerialization;
-import org.apache.gora.mapreduce.PersistentSerializer;
 import org.apache.gora.memory.store.MemStore;
 import org.apache.gora.query.Result;
 import org.apache.gora.store.DataStoreFactory;
@@ -98,9 +95,9 @@ public class TestPersistentSerialization {
     page2.setUrl(new Utf8("baz"));
     page3.setUrl(new Utf8("bar"));
 
-    page1.addToParsedContent(new Utf8("coo"));
+    page1.getParsedContent().add(new Utf8("coo"));
 
-    page2.putToOutlinks(new Utf8("a"), new Utf8("b"));
+    page2.getOutlinks().put(new Utf8("a"), new Utf8("b"));
 
     TestIOUtils.testSerializeDeserialize(page1, page2, page3);
   }

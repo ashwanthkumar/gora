@@ -65,4 +65,27 @@ public class AvroUtils {
     return (Schema) field.get(null);
   }
   
+  /**
+   * Return the field names from a persistent object
+   * @param persistent the persistent object to get the fields names from
+   * @return the field names
+   */
+  public static String[] getPersistentFieldNames(Persistent persistent){
+    return getSchemaFieldNames(persistent.getSchema());
+  }
+  
+  /**
+   * Return the field names from a schema object
+   * @param persistent the persistent object to get the fields names from
+   * @return the field names
+   */
+  public static String[] getSchemaFieldNames(Schema schema){
+    List<Field> fields = schema.getFields();
+    String[] fieldNames = new String[fields.size()-1];
+    for(int i =0; i<fieldNames.length; i++){
+      fieldNames[i] = fields.get(i+1).name();
+    }
+    return fieldNames;
+  }
+  
 }

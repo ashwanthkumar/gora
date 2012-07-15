@@ -71,8 +71,8 @@ public abstract class DataStoreMapReduceTestBase extends HadoopTestCase {
   @Override
   public void tearDown() throws Exception {
     LOG.info("Tearing down Hadoop Test Case...");
-    super.tearDown();
     webPageStore.close();
+    super.tearDown();
   }
 
   protected abstract DataStore<String, WebPage> createWebPageDataStore()

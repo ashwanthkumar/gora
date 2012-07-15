@@ -26,8 +26,8 @@ import java.util.List;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
+import org.apache.avro.Schema.Field;
 import org.apache.gora.persistency.Persistent;
-import org.apache.gora.persistency.impl.StateManagerImpl;
 import org.apache.gora.query.PartitionQuery;
 import org.apache.gora.query.Query;
 import org.apache.gora.query.Result;
@@ -138,12 +138,17 @@ public class MemStore<K, T extends Persistent> extends DataStoreBase<K, T> {
    */
   @SuppressWarnings("unchecked")
   private static<T extends Persistent> T getPersistent(T obj, String[] fields) {
-    if(Arrays.equals(fields, obj.getFields())) {
+    List<Field> otherFields = obj.getSchema().getFields();
+    String[] otherFieldStrings = new String[otherFields.size()];
+    for(int i = 0; i<otherFields.size(); i++ ){
+      otherFieldStrings[i] = otherFields.get(i).name();
+    }
+    if(Arrays.equals(fields, otherFieldStrings)) {
       return obj;
     }
-    T newObj = (T) obj.newInstance(new StateManagerImpl());
-    for(String field:fields) {
-      int index = newObj.getFieldIndex(field);
+    T newObj = (T) obj.clone();
+    for(int i = 0; i<otherFields.size(); i++) {
+      int index = otherFields.get(i).pos();
       newObj.put(index, obj.get(index));
     }
     return newObj;

@@ -74,6 +74,7 @@ import org.apache.avro.generic.GenericArray;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.util.Utf8;
@@ -83,7 +84,6 @@ import org.apache.gora.accumulo.query.AccumuloResult;
 import org.apache.gora.persistency.ListGenericArray;
 import org.apache.gora.persistency.Persistent;
 import org.apache.gora.persistency.State;
-import org.apache.gora.persistency.StateManager;
 import org.apache.gora.persistency.StatefulHashMap;
 import org.apache.gora.persistency.StatefulMap;
 import org.apache.gora.query.PartitionQuery;
@@ -500,14 +500,13 @@ public class AccumuloStore<K,T extends Persistent> extends DataStoreBase<K,T> {
     Mutation m = new Mutation(new Text(toBytes(key)));
     
     Schema schema = val.getSchema();
-    StateManager stateManager = val.getStateManager();
     
-    Iterator<Field> iter = schema.getFields().iterator();
+    List<Field> fields = schema.getFields();
     
     int count = 0;
-    for (int i = 0; iter.hasNext(); i++) {
-      Field field = iter.next();
-      if (!stateManager.isDirty(val, i)) {
+    for (int i = 1; i<fields.size(); i++) {
+      Field field = fields.get(i);
+      if (!val.isDirty(i)) {
         continue;
       }
       
@@ -558,7 +557,7 @@ public class AccumuloStore<K,T extends Persistent> extends DataStoreBase<K,T> {
         case RECORD:
           SpecificDatumWriter writer = new SpecificDatumWriter(field.schema());
           ByteArrayOutputStream os = new ByteArrayOutputStream();
-          BinaryEncoder encoder = new BinaryEncoder(os);
+          BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(os, null);
           writer.write(o, encoder);
           encoder.flush();
           m.put(col.getFirst(), col.getSecond(), new Value(os.toByteArray()));

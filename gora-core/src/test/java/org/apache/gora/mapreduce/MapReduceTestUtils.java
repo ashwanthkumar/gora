@@ -20,10 +20,10 @@ package org.apache.gora.mapreduce;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.avro.Schema.Field;
 import org.apache.gora.examples.WebPageDataCreator;
 import org.apache.gora.examples.generated.TokenDatum;
 import org.apache.gora.examples.generated.WebPage;
@@ -33,6 +33,8 @@ import org.apache.gora.query.Query;
 import org.apache.gora.store.DataStore;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Assert;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MapReduceTestUtils {
 
@@ -51,7 +53,12 @@ public class MapReduceTestUtils {
     
     QueryCounter<String,WebPage> counter = new QueryCounter<String,WebPage>(conf);
     Query<String,WebPage> query = dataStore.newQuery();
-    query.setFields(WebPage._ALL_FIELDS);
+    List<Field> fields = WebPage.SCHEMA$.getFields();
+    String[] fieldNames = new String[fields.size()];
+    for(int i = 0; i< fieldNames.length; i++){
+      fieldNames[i] = fields.get(i).name();
+    }
+    query.setFields(fieldNames);
     
     dataStore.close();
     
@@ -98,6 +105,6 @@ public class MapReduceTestUtils {
       String token, int count) throws IOException {
     TokenDatum datum = outStore.get(token, null);
     Assert.assertNotNull("token:" + token + " cannot be found in datastore", datum);
-    Assert.assertEquals("count for token:" + token + " is wrong", count, datum.getCount());
+    Assert.assertEquals("count for token:" + token + " is wrong", count, datum.getCount().intValue());
   }
 }

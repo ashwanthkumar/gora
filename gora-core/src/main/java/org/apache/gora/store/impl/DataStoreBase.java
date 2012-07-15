@@ -21,15 +21,15 @@ package org.apache.gora.store.impl;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Properties;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
+import org.apache.avro.specific.SpecificDatumReader;
+import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.gora.avro.PersistentDatumReader;
-import org.apache.gora.avro.PersistentDatumWriter;
 import org.apache.gora.persistency.BeanFactory;
 import org.apache.gora.persistency.Persistent;
 import org.apache.gora.persistency.impl.BeanFactoryImpl;
@@ -40,9 +40,7 @@ import org.apache.gora.util.ClassLoadingUtils;
 import org.apache.gora.util.StringUtils;
 import org.apache.gora.util.WritableUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.MapWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.Writable;
 
 /**
  * A Base class for {@link DataStore}s.
@@ -67,9 +65,9 @@ implements DataStore<K, T> {
 
   protected Properties properties;
 
-  protected PersistentDatumReader<T> datumReader;
+  protected SpecificDatumReader<T> datumReader;
 
-  protected PersistentDatumWriter<T> datumWriter;
+  protected SpecificDatumWriter<T> datumWriter;
 
   public DataStoreBase() {
   }
@@ -87,8 +85,8 @@ implements DataStore<K, T> {
     autoCreateSchema = DataStoreFactory.getAutoCreateSchema(properties, this);
     this.properties = properties;
 
-    datumReader = new PersistentDatumReader<T>(schema, false);
-    datumWriter = new PersistentDatumWriter<T>(schema, false);
+    datumReader = new SpecificDatumReader<T>(schema);
+    datumWriter = new SpecificDatumWriter<T>(schema);
   }
 
   @Override
@@ -154,7 +152,12 @@ implements DataStore<K, T> {
     if(fields != null) {
       return fields;
     }
-    return beanFactory.getCachedPersistent().getFields();
+    List<Field> schemaFields = beanFactory.getCachedPersistent().getSchema().getFields();
+    String[] fieldNames = new String[schemaFields.size()];
+    for(int i = 0; i<fieldNames.length; i++ ){
+      fieldNames[i] = schemaFields.get(i).name();
+    }
+    return fieldNames;
   }
 
   @Override
