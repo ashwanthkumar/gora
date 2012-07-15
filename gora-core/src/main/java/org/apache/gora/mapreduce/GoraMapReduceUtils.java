@@ -21,6 +21,7 @@ package org.apache.gora.mapreduce;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.avro.hadoop.io.AvroSerialization;
 import org.apache.gora.util.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -46,11 +47,7 @@ public class GoraMapReduceUtils {
   
   public static void setIOSerializations(Configuration conf, boolean reuseObjects) {
     String serializationClass =
-      PersistentSerialization.class.getCanonicalName();
-    if (!reuseObjects) {
-      serializationClass =
-        PersistentNonReusingSerialization.class.getCanonicalName();
-    }
+      AvroSerialization.class.getCanonicalName();
     String[] serializations = StringUtils.joinStringArrays(
         conf.getStrings("io.serializations"), 
         "org.apache.hadoop.io.serializer.WritableSerialization",

@@ -183,7 +183,7 @@ public abstract class DataStoreTestBase {
     WebPage page = webPageStore.newPersistent();
     Metadata metadata = new Metadata();  
     metadata.setVersion(1);
-    metadata.putToData(new Utf8("foo"), new Utf8("baz"));
+    metadata.getData().put(new Utf8("foo"), new Utf8("baz"));
 
     page.setMetadata(metadata);
     page.setUrl(new Utf8(url));
@@ -194,7 +194,7 @@ public abstract class DataStoreTestBase {
     page = webPageStore.get(revUrl);
     metadata = page.getMetadata();
     Assert.assertNotNull(metadata);
-    Assert.assertEquals(1, metadata.getVersion());
+    Assert.assertEquals(1, metadata.getVersion().intValue());
     Assert.assertEquals(new Utf8("baz"), metadata.getData().get(new Utf8("foo")));
   }
 
@@ -207,7 +207,7 @@ public abstract class DataStoreTestBase {
     String[] tokens = {"example", "content", "in", "example.com"};
 
     for(String token: tokens) {
-      page.addToParsedContent(new Utf8(token));
+      page.getParsedContent().add(new Utf8(token));
     }
 
     webPageStore.put("com.example/http", page);
@@ -246,9 +246,9 @@ public abstract class DataStoreTestBase {
     WebPage page = webPageStore.newPersistent();
 
     page.setUrl(new Utf8("http://example.com"));
-    page.putToOutlinks(new Utf8("http://example2.com"), new Utf8("anchor2"));
-    page.putToOutlinks(new Utf8("http://example3.com"), new Utf8("anchor3"));
-    page.putToOutlinks(new Utf8("http://example3.com"), new Utf8("anchor4"));
+    page.getOutlinks().put(new Utf8("http://example2.com"), new Utf8("anchor2"));
+    page.getOutlinks().put(new Utf8("http://example3.com"), new Utf8("anchor3"));
+    page.getOutlinks().put(new Utf8("http://example3.com"), new Utf8("anchor4"));
     webPageStore.put("com.example/http", page);
     webPageStore.close();
 

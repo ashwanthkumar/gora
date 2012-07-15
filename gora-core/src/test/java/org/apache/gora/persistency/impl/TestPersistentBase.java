@@ -27,6 +27,7 @@ import org.apache.gora.examples.generated.WebPage;
 import org.apache.gora.memory.store.MemStore;
 import org.apache.gora.store.DataStoreFactory;
 import org.apache.gora.store.DataStoreTestUtil;
+import org.apache.gora.util.AvroUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Assert;
 import org.junit.Test;
@@ -37,52 +38,13 @@ import org.junit.Test;
 public class TestPersistentBase {
   
   @Test
-  public void testGetFields() {
-    WebPage page = new WebPage();
-    String[] fields = page.getFields();
-    Assert.assertArrayEquals(WebPage._ALL_FIELDS, fields);
-  }
-  
-  @Test
-  public void testGetField() {
-    WebPage page = new WebPage();
-    for(int i=0; i<WebPage._ALL_FIELDS.length; i++) {
-      String field = page.getField(i);
-      Assert.assertEquals(WebPage._ALL_FIELDS[i], field);
-    }
-  }
-  
-  @Test
-  public void testGetFieldIndex() {
-    WebPage page = new WebPage();
-    for(int i=0; i<WebPage._ALL_FIELDS.length; i++) {
-      int index = page.getFieldIndex(WebPage._ALL_FIELDS[i]);
-      Assert.assertEquals(i, index);
-    }
-  }
-  
-  @Test
-  public void testFieldsWithTwoClasses() {
-    WebPage page = new WebPage();
-    for(int i=0; i<WebPage._ALL_FIELDS.length; i++) {
-      int index = page.getFieldIndex(WebPage._ALL_FIELDS[i]);
-      Assert.assertEquals(i, index);
-    }
-    Employee employee = new Employee();
-    for(int i=0; i<Employee._ALL_FIELDS.length; i++) {
-      int index = employee.getFieldIndex(Employee._ALL_FIELDS[i]);
-      Assert.assertEquals(i, index);
-    }
-  }
-  
-  @Test
   public void testClear() {
     
     //test clear all fields
     WebPage page = new WebPage();
     page.setUrl(new Utf8("http://foo.com"));
-    page.addToParsedContent(new Utf8("foo"));
-    page.putToOutlinks(new Utf8("foo"), new Utf8("bar"));
+    page.getParsedContent().add(new Utf8("foo"));
+    page.getOutlinks().put(new Utf8("foo"), new Utf8("bar"));
     page.setContent(ByteBuffer.wrap("foo baz bar".getBytes()));
     
     page.clear();
@@ -94,8 +56,8 @@ public class TestPersistentBase {
     
     //set fields again
     page.setUrl(new Utf8("http://bar.com"));
-    page.addToParsedContent(new Utf8("bar"));
-    page.putToOutlinks(new Utf8("bar"), new Utf8("baz"));
+    page.getParsedContent().add(new Utf8("bar"));
+    page.getOutlinks().put(new Utf8("bar"), new Utf8("baz"));
     page.setContent(ByteBuffer.wrap("foo baz bar barbaz".getBytes()));
     
     //test clear new object

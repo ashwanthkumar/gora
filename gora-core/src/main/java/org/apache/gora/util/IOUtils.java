@@ -38,10 +38,12 @@ import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
-import org.apache.avro.ipc.ByteBufferInputStream;
-import org.apache.avro.ipc.ByteBufferOutputStream;
-import org.apache.gora.avro.PersistentDatumReader;
-import org.apache.gora.avro.PersistentDatumWriter;
+import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.specific.SpecificDatumReader;
+import org.apache.avro.specific.SpecificDatumWriter;
+import org.apache.avro.specific.SpecificRecord;
+import org.apache.avro.util.ByteBufferInputStream;
+import org.apache.avro.util.ByteBufferOutputStream;
 import org.apache.gora.persistency.Persistent;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.DataInputBuffer;
@@ -162,20 +164,19 @@ public class IOUtils {
   /**
    * Serializes the field object using the datumWriter.
    */
-  public static<T extends Persistent> void serialize(OutputStream os,
-      PersistentDatumWriter<T> datumWriter, Schema schema, Object object)
+  public static<T extends SpecificRecord> void serialize(OutputStream os,
+      SpecificDatumWriter<T> datumWriter, Schema schema, T object)
       throws IOException {
-
-    BinaryEncoder encoder = new BinaryEncoder(os);
-    datumWriter.write(schema, object, encoder);
+    BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(os, null);
+    datumWriter.write(object, encoder);
     encoder.flush();
   }
 
   /**
    * Serializes the field object using the datumWriter.
    */
-  public static<T extends Persistent> byte[] serialize(PersistentDatumWriter<T> datumWriter
-      , Schema schema, Object object) throws IOException {
+  public static<T extends SpecificRecord> byte[] serialize(SpecificDatumWriter<T> datumWriter
+      , Schema schema, T object) throws IOException {
     ByteArrayOutputStream os = new ByteArrayOutputStream();
     serialize(os, datumWriter, schema, object);
     return os.toByteArray();
@@ -251,34 +252,21 @@ public class IOUtils {
   /**
    * Deserializes the field object using the datumReader.
    */
-  @SuppressWarnings("unchecked")
-  public static<K, T extends Persistent> K deserialize(InputStream is,
-      PersistentDatumReader<T> datumReader, Schema schema, K object)
+  public static<T extends SpecificRecord> T deserialize(InputStream is,
+      SpecificDatumReader<T> datumReader, Schema schema, T object)
       throws IOException {
-    decoder = DecoderFactory.defaultFactory().createBinaryDecoder(is, decoder);
-    return (K)datumReader.read(object, schema, decoder);
+    decoder = DecoderFactory.get().binaryDecoder(is, decoder);
+    return (T)datumReader.read(object, decoder);
   }
 
   /**
    * Deserializes the field object using the datumReader.
    */
-  @SuppressWarnings("unchecked")
-  public static<K, T extends Persistent> K deserialize(byte[] bytes,
-      PersistentDatumReader<T> datumReader, Schema schema, K object)
+  public static<T extends SpecificRecord> T deserialize(byte[] bytes,
+      SpecificDatumReader<T> datumReader, Schema schema, T object)
       throws IOException {
-    decoder = DecoderFactory.defaultFactory().createBinaryDecoder(bytes, decoder);
-    return (K)datumReader.read(object, schema, decoder);
-  }
-
-
-  /**
-   * Serializes the field object using the datumWriter.
-   */
-  public static<T extends Persistent> byte[] deserialize(PersistentDatumWriter<T> datumWriter
-      , Schema schema, Object object) throws IOException {
-    ByteArrayOutputStream os = new ByteArrayOutputStream();
-    serialize(os, datumWriter, schema, object);
-    return os.toByteArray();
+    decoder = DecoderFactory.get().binaryDecoder(bytes, decoder);
+    return (T)datumReader.read(object, decoder);
   }
 
   /**

@@ -48,13 +48,13 @@ import org.apache.gora.hbase.util.HBaseByteInterface;
 import org.apache.gora.persistency.ListGenericArray;
 import org.apache.gora.persistency.Persistent;
 import org.apache.gora.persistency.State;
-import org.apache.gora.persistency.StateManager;
 import org.apache.gora.persistency.StatefulHashMap;
 import org.apache.gora.persistency.StatefulMap;
 import org.apache.gora.query.PartitionQuery;
 import org.apache.gora.query.Query;
 import org.apache.gora.query.impl.PartitionQueryImpl;
 import org.apache.gora.store.impl.DataStoreBase;
+import org.apache.gora.util.AvroUtils;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
@@ -175,16 +175,15 @@ implements Configurable {
   @Override
   public void put(K key, T persistent) throws IOException {
     Schema schema = persistent.getSchema();
-    StateManager stateManager = persistent.getStateManager();
     byte[] keyRaw = toBytes(key);
     Put put = new Put(keyRaw);
     Delete delete = new Delete(keyRaw);
     boolean hasPuts = false;
     boolean hasDeletes = false;
-    Iterator<Field> iter = schema.getFields().iterator();
-    for (int i = 0; iter.hasNext(); i++) {
-      Field field = iter.next();
-      if (!stateManager.isDirty(persistent, i)) {
+    List<Field> fields = schema.getFields();
+    for (int i = 1; i<fields.size(); i++) {
+      Field field = fields.get(i);
+      if (!persistent.isDirty(i)) {
         continue;
       }
       Type type = field.schema().getType();
@@ -268,7 +267,7 @@ implements Configurable {
     //find whether all fields are queried, which means that complete
     //rows will be deleted
     boolean isAllFields = Arrays.equals(fields
-        , getBeanFactory().getCachedPersistent().getFields());
+        , AvroUtils.getPersistentFieldNames(getBeanFactory().getCachedPersistent()));
 
     org.apache.gora.query.Result<K, T> result = query.execute();
 
@@ -452,7 +451,6 @@ implements Configurable {
       return null;
 
     T persistent = newPersistent();
-    StateManager stateManager = persistent.getStateManager();
     for (String f : fields) {
       HBaseColumn col = mapping.getColumn(f);
       Field field = fieldMap.get(f);
@@ -495,7 +493,7 @@ implements Configurable {
           break;
       }
     }
-    stateManager.clearDirty(persistent);
+    persistent.clearDirty();
     return persistent;
   }
 

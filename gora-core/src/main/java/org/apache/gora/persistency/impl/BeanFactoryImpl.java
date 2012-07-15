@@ -61,19 +61,19 @@ public class BeanFactoryImpl<K, T extends Persistent> implements BeanFactory<K, 
   @Override
   @SuppressWarnings("unchecked")
   public K newKey() throws Exception {
-    if(isKeyPersistent)
-      return (K)((Persistent)key).newInstance(new StateManagerImpl());
-    else if(keyConstructor == null) {
-      throw new RuntimeException("Key class does not have a no-arg constructor");
-    }
-    else
-      return keyConstructor.newInstance(ReflectionUtils.EMPTY_OBJECT_ARRAY);
+    return keyClass.newInstance();
   }
  
   @SuppressWarnings("unchecked")
   @Override
   public T newPersistent() {
-    return (T) persistent.newInstance(new StateManagerImpl());
+    try {
+      return persistentClass.newInstance();
+    } catch (InstantiationException e) {
+      throw new RuntimeException(e);
+    } catch (IllegalAccessException e) {
+      throw new RuntimeException(e);
+    }
   }
   
   @Override

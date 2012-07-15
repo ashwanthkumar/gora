@@ -117,16 +117,16 @@ public class WebPageDataCreator {
       page.setUrl(new Utf8(URLS[i]));
       page.setContent(ByteBuffer.wrap(CONTENTS[i].getBytes()));
       for(String token : CONTENTS[i].split(" ")) {
-        page.addToParsedContent(new Utf8(token));  
+        page.getParsedContent().add(new Utf8(token));
       }
       
       for(int j=0; j<LINKS[i].length; j++) {
-        page.putToOutlinks(new Utf8(URLS[LINKS[i][j]]), new Utf8(ANCHORS[i][j]));
+        page.getOutlinks().put(new Utf8(URLS[LINKS[i][j]]), new Utf8(ANCHORS[i][j]));
       }
       
       Metadata metadata = new Metadata();
       metadata.setVersion(1);
-      metadata.putToData(new Utf8("metakey"), new Utf8("metavalue"));
+      metadata.getData().put(new Utf8("metakey"), new Utf8("metavalue"));
       page.setMetadata(metadata);
       
       dataStore.put(URLS[i], page);
