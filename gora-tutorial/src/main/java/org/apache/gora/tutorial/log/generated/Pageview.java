@@ -8,7 +8,7 @@ package org.apache.gora.tutorial.log.generated;
 public class Pageview extends org.apache.gora.persistency.impl.PersistentBase implements org.apache.avro.specific.SpecificRecord, org.apache.gora.persistency.Persistent {
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Pageview\",\"namespace\":\"org.apache.gora.tutorial.log.generated\",\"fields\":[{\"name\":\"__g__dirty\",\"type\":\"bytes\",\"doc\":\"Bytes used to represent weather or not a field is dirty.\",\"default\":\"AAA=\"},{\"name\":\"url\",\"type\":\"string\"},{\"name\":\"timestamp\",\"type\":\"long\"},{\"name\":\"ip\",\"type\":\"string\"},{\"name\":\"httpMethod\",\"type\":\"string\"},{\"name\":\"httpStatusCode\",\"type\":\"int\"},{\"name\":\"responseSize\",\"type\":\"int\"},{\"name\":\"referrer\",\"type\":\"string\"},{\"name\":\"userAgent\",\"type\":\"string\"}]}");
   /** Bytes used to represent weather or not a field is dirty. */
-  @Deprecated public java.nio.ByteBuffer __g__dirty;
+  @Deprecated public java.nio.ByteBuffer __g__dirty = java.nio.ByteBuffer.wrap(new byte[2]);
   @Deprecated public java.lang.CharSequence url;
   @Deprecated public long timestamp;
   @Deprecated public java.lang.CharSequence ip;

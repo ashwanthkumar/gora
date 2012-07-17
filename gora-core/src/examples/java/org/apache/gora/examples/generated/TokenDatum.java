@@ -8,7 +8,7 @@ package org.apache.gora.examples.generated;
 public class TokenDatum extends org.apache.gora.persistency.impl.PersistentBase implements org.apache.avro.specific.SpecificRecord, org.apache.gora.persistency.Persistent {
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"TokenDatum\",\"namespace\":\"org.apache.gora.examples.generated\",\"fields\":[{\"name\":\"__g__dirty\",\"type\":\"bytes\",\"doc\":\"Bytes used to represent weather or not a field is dirty.\",\"default\":\"AA==\"},{\"name\":\"count\",\"type\":\"int\"}]}");
   /** Bytes used to represent weather or not a field is dirty. */
-  @Deprecated public java.nio.ByteBuffer __g__dirty;
+  @Deprecated public java.nio.ByteBuffer __g__dirty = java.nio.ByteBuffer.wrap(new byte[1]);
   @Deprecated public int count;
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
   // Used by DatumWriter.  Applications should not call. 
@@ -46,7 +46,7 @@ public class TokenDatum extends org.apache.gora.persistency.impl.PersistentBase 
   }
   
   /**
-   * Sets the value of the 'count' field.
+   * Checks the dirty status of the 'count' field. A field is dirty if it represents a change that has not yet been written to the database.
    * @param value the value to set.
    */
   public boolean isCountDirty(java.lang.Integer value) {

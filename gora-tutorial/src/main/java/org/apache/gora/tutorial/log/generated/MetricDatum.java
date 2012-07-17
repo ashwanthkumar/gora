@@ -8,7 +8,7 @@ package org.apache.gora.tutorial.log.generated;
 public class MetricDatum extends org.apache.gora.persistency.impl.PersistentBase implements org.apache.avro.specific.SpecificRecord, org.apache.gora.persistency.Persistent {
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"MetricDatum\",\"namespace\":\"org.apache.gora.tutorial.log.generated\",\"fields\":[{\"name\":\"__g__dirty\",\"type\":\"bytes\",\"doc\":\"Bytes used to represent weather or not a field is dirty.\",\"default\":\"AA==\"},{\"name\":\"metricDimension\",\"type\":\"string\"},{\"name\":\"timestamp\",\"type\":\"long\"},{\"name\":\"metric\",\"type\":\"long\"}]}");
   /** Bytes used to represent weather or not a field is dirty. */
-  @Deprecated public java.nio.ByteBuffer __g__dirty;
+  @Deprecated public java.nio.ByteBuffer __g__dirty = java.nio.ByteBuffer.wrap(new byte[1]);
   @Deprecated public java.lang.CharSequence metricDimension;
   @Deprecated public long timestamp;
   @Deprecated public long metric;

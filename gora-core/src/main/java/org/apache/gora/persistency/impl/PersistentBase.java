@@ -18,10 +18,12 @@
 package org.apache.gora.persistency.impl;
 
 import java.nio.ByteBuffer;
+import java.util.List;
 
 import org.apache.avro.Schema.Field;
-import org.apache.avro.specific.SpecificData;
+import org.apache.avro.Schema.Type;
 import org.apache.avro.specific.SpecificRecordBase;
+import org.apache.gora.persistency.Dirtyable;
 import org.apache.gora.persistency.Persistent;
 
 /**
@@ -57,23 +59,39 @@ public abstract class PersistentBase extends SpecificRecordBase implements
 
   @Override
   public boolean isDirty() {
+    List<Field> fields = getSchema().getFields();
+    boolean isSubRecordDirty = false;
+    for (Field field : fields) {
+      switch (field.schema().getType()) {
+      case RECORD:
+      case MAP:
+      case ARRAY:
+        isSubRecordDirty |= ((Dirtyable) get(field.pos())).isDirty();
+        break;
+      }
+    }
     ByteBuffer dirtyBytes = getDirtyBytes();
     assert (dirtyBytes.position() == 0);
     boolean dirty = false;
     for (int i = 0; i < dirtyBytes.limit(); i++) {
       dirty |= dirtyBytes.get(i) != 0;
     }
-    return dirty;
+    return isSubRecordDirty | dirty;
   }
 
   @Override
   public boolean isDirty(int fieldIndex) {
+    Field field = getSchema().getFields().get(fieldIndex);
+    boolean isSubRecordDirty = false;
+    if (field.schema().getType() == Type.RECORD) {
+      isSubRecordDirty = ((PersistentBase) get(fieldIndex)).isDirty();
+    }
     ByteBuffer dirtyBytes = getDirtyBytes();
     assert (dirtyBytes.position() == 0);
     int byteOffset = fieldIndex / 8;
     int bitOffset = fieldIndex % 8;
     byte currentByte = dirtyBytes.get(byteOffset);
-    return 0 != ((1 << bitOffset) & currentByte);
+    return isSubRecordDirty || 0 != ((1 << bitOffset) & currentByte);
   }
 
   @Override
@@ -97,7 +115,7 @@ public abstract class PersistentBase extends SpecificRecordBase implements
     int byteOffset = fieldIndex / 8;
     int bitOffset = fieldIndex % 8;
     byte currentByte = dirtyBytes.get(byteOffset);
-    currentByte = (byte) ((1 << bitOffset) & currentByte);
+    currentByte = (byte) ((1 << bitOffset) | currentByte);
     dirtyBytes.put(byteOffset, currentByte);
   }
 
@@ -109,14 +127,14 @@ public abstract class PersistentBase extends SpecificRecordBase implements
   private ByteBuffer getDirtyBytes() {
     return (ByteBuffer) get(0);
   }
-  
-  @Override
-  public void clear() {
-    
-  }
 
   @Override
-  public PersistentBase clone() {
-    return null;
+  public void clear() {
+    int numFields = getSchema().getFields().size();
+    for (int i = 1; i < numFields; i++) {
+      put(i, null);
+    }
+    clearDirty();
   }
+
 }

@@ -36,6 +36,7 @@ import org.apache.gora.query.impl.QueryBase;
 import org.apache.gora.query.impl.ResultBase;
 import org.apache.gora.store.DataStore;
 import org.apache.gora.store.impl.DataStoreBase;
+import org.apache.gora.util.AvroUtils;
 
 /**
  * Memory based {@link DataStore} implementation for tests.
@@ -146,7 +147,7 @@ public class MemStore<K, T extends Persistent> extends DataStoreBase<K, T> {
     if(Arrays.equals(fields, otherFieldStrings)) {
       return obj;
     }
-    T newObj = (T) obj.clone();
+    T newObj = (T) AvroUtils.deepClonePersistent(obj);
     for(int i = 0; i<otherFields.size(); i++) {
       int index = otherFields.get(i).pos();
       newObj.put(index, obj.get(index));

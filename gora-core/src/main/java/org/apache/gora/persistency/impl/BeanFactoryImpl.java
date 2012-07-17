@@ -59,12 +59,10 @@ public class BeanFactoryImpl<K, T extends Persistent> implements BeanFactory<K, 
   }
   
   @Override
-  @SuppressWarnings("unchecked")
   public K newKey() throws Exception {
     return keyClass.newInstance();
   }
  
-  @SuppressWarnings("unchecked")
   @Override
   public T newPersistent() {
     try {

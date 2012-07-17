@@ -22,7 +22,7 @@ import org.apache.avro.specific.SpecificRecord;
 /**
  * Objects that are persisted by Gora implements this interface.
  */
-public interface Persistent extends SpecificRecord, Cloneable {
+public interface Persistent extends SpecificRecord, Dirtyable {
   
 
   public static String DIRTY_BYTES_FIELD_NAME = "__g__dirty";
@@ -33,13 +33,6 @@ public interface Persistent extends SpecificRecord, Cloneable {
    * before re-using the object to hold the data for another result.  
    */
   void clear();
-  
-  /**
-   * Returns whether any of the fields of the object has been modified 
-   * after construction or loading. 
-   * @return whether any of the fields of the object has changed
-   */
-  boolean isDirty();
   
   /**
    * Returns whether the field has been modified.
@@ -84,10 +77,4 @@ public interface Persistent extends SpecificRecord, Cloneable {
    */
   void clearDirty(String field);
   
-  /**
-   * Clears the dirty state.
-   */
-  void clearDirty();
-  
-  Persistent clone();
 }

@@ -28,7 +28,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 #if ($field.doc())
   /** $field.doc() */
 #end
-  @Deprecated public ${this.javaUnbox($field.schema())} ${this.mangle($field.name(), $schema.isError())};
+  @Deprecated public ${this.javaUnbox($field.schema())} ${this.mangle($field.name(), $schema.isError())}#if(! $this.isNotHiddenField($field.name()) ) = ${this.generateDefaultValueString($schema,$field.name())}#end;
 #end
 #if ($schema.isError())
 
@@ -90,7 +90,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
    * @param value the value to set.
    */
   public void ${this.generateSetMethod($schema, $field)}(${this.javaType($field.schema())} value) {
-    this.${this.mangle($field.name(), $schema.isError())} = value;
+    this.${this.mangle($field.name(), $schema.isError())} = ${this.generateAppropriateWrapperOrValue($field.schema())};
     setDirty(${field.pos()});
   }
   

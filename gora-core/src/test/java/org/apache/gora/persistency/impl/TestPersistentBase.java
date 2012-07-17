@@ -20,9 +20,12 @@ package org.apache.gora.persistency.impl;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 import org.apache.avro.util.Utf8;
 import org.apache.gora.examples.generated.Employee;
+import org.apache.gora.examples.generated.Metadata;
 import org.apache.gora.examples.generated.WebPage;
 import org.apache.gora.memory.store.MemStore;
 import org.apache.gora.store.DataStoreFactory;
@@ -43,6 +46,7 @@ public class TestPersistentBase {
     //test clear all fields
     WebPage page = new WebPage();
     page.setUrl(new Utf8("http://foo.com"));
+    page.setParsedContent(new ArrayList<CharSequence>());
     page.getParsedContent().add(new Utf8("foo"));
     page.getOutlinks().put(new Utf8("foo"), new Utf8("bar"));
     page.setContent(ByteBuffer.wrap("foo baz bar".getBytes()));
@@ -69,15 +73,21 @@ public class TestPersistentBase {
     employee.clear();
   }
   
-  @Test
-  public void testClone() throws IOException {
-    //more tests for clone are in TestPersistentDatumReader
-    @SuppressWarnings("unchecked")
-    MemStore<String, Employee> store = DataStoreFactory.getDataStore(
-        MemStore.class, String.class, Employee.class, new Configuration());
-
-    Employee employee = DataStoreTestUtil.createEmployee(store);
-    
-    Assert.assertEquals(employee, employee.clone());
+  @Test public void checksFieldsRecursivelyForDirtyness(){
+    WebPage webpage = new WebPage();
+    webpage.setMetadata(new Metadata());
+    webpage.clearDirty();
+    webpage.getMetadata().setData(new HashMap<CharSequence, CharSequence>());
+    Assert.assertTrue(webpage.isDirty());
   }
+  
+  @Test public void recursiveClears(){
+    WebPage webpage = new WebPage();
+    webpage.setMetadata(new Metadata());
+    webpage.getMetadata().setData(new HashMap<CharSequence, CharSequence>());
+    webpage.getMetadata().getData().put("foo", "bar");
+    webpage.clearDirty();
+    Assert.assertFalse(webpage.isDirty());
+  }
+  
 }
