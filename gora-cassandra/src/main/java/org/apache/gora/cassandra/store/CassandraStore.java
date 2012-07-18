@@ -301,7 +301,6 @@ public class CassandraStore<K, T extends Persistent> extends
     for (Field field : schema.getFields()) {
       if (value.isDirty(field.pos())) {
         Object fieldValue = value.get(field.pos());
-
         // check if field has a nested structure (array, map, or record)
         Schema fieldSchema = field.schema();
         Type type = fieldSchema.getType();
@@ -377,6 +376,17 @@ public class CassandraStore<K, T extends Persistent> extends
         if (value instanceof PersistentBase) {
           PersistentBase persistentBase = (PersistentBase) value;
           for (Field member : schema.getFields()) {
+              // TODO: hack, do not store empty arrays
+              Object memberValue = persistentBase.get(member.pos());
+              if (memberValue instanceof GenericArray<?>) {
+                if (((GenericArray)memberValue).size() == 0) {
+                  continue;
+                }
+              } else if (memberValue instanceof StatefulHashMap<?,?>) {
+                if (((StatefulHashMap)memberValue).size() == 0) {
+                  continue;
+                }
+              }
 
             // TODO: hack, do not store empty arrays
             Object memberValue = persistentBase.get(member.pos());
@@ -393,25 +403,13 @@ public class CassandraStore<K, T extends Persistent> extends
           LOG.info("Record not supported: " + value.toString());
 
         }
-      }
-      break;
-    case MAP:
-      if (value != null) {
-        if (value instanceof StatefulHashMap<?, ?>) {
-          // TODO cast to stateful map and only write dirty keys
-          Map<Utf8, Object> map = (Map<Utf8, Object>) value;
-          for (Utf8 mapKey : map.keySet()) {
-
-            // TODO: hack, do not store empty arrays
-            Object keyValue = map.get(mapKey);
-            if (keyValue instanceof GenericArray<?>) {
-              if (((GenericArray) keyValue).size() == 0) {
-                continue;
-              }
-            }
-
-            this.cassandraClient.addSubColumn(key, field.name(),
-                mapKey.toString(), keyValue);
+        break;
+      case MAP:
+        if (value != null) {
+          if (value instanceof StatefulHashMap<?, ?>) {
+            this.cassandraClient.addStatefulHashMap(key, field.name(), (StatefulHashMap<Utf8,Object>)value);
+          } else {
+            LOG.info("Map not supported: " + value.toString());
           }
         } else {
           LOG.info("Map not supported: " + value.toString());
