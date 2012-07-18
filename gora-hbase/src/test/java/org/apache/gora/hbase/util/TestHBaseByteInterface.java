@@ -20,6 +20,7 @@ package org.apache.gora.hbase.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Callable;
@@ -36,46 +37,46 @@ import org.junit.Test;
 
 public class TestHBaseByteInterface {
 
-  private static final Random RANDOM = new Random();
+  private static final Random RANDOM = new Random(0);
 
   @Test
   public void testEncodingDecoding() throws Exception {
     for (int i=0; i < 1000; i++) {
     
       //employer
-      Utf8 name = new Utf8("john");
       long dateOfBirth = System.currentTimeMillis();
       int salary = 1337;
-      Utf8 ssn = new Utf8(String.valueOf(RANDOM.nextLong()));
+      String ssn = String.valueOf(RANDOM.nextLong());
       
       Employee e = new Employee();
-      e.setName(name);
+      e.setName("john");
       e.setDateOfBirth(dateOfBirth);
       e.setSalary(salary);
       e.setSsn(ssn);
       
-      byte[] employerBytes = HBaseByteInterface.toBytes(e, Employee._SCHEMA);
-      Employee e2 = (Employee) HBaseByteInterface.fromBytes(Employee._SCHEMA, 
+      byte[] employerBytes = HBaseByteInterface.toBytes(e, Employee.SCHEMA$);
+      Employee e2 = (Employee) HBaseByteInterface.fromBytes(Employee.SCHEMA$, 
           employerBytes);
       
-      Assert.assertEquals(name, e2.getName());
-      Assert.assertEquals(dateOfBirth, e2.getDateOfBirth());
-      Assert.assertEquals(salary, e2.getSalary());
+      Assert.assertEquals("john", e2.getName());
+      Assert.assertEquals(dateOfBirth, e2.getDateOfBirth().longValue());
+      Assert.assertEquals(salary, e2.getSalary().intValue());
       Assert.assertEquals(ssn, e2.getSsn());
       
       
       //metadata
-      Utf8 key = new Utf8("theKey");
-      Utf8 value = new Utf8("theValue " + RANDOM.nextLong());
+      String key = "theKey";
+      String value = "theValue " + RANDOM.nextLong();
       
       Metadata m = new Metadata();
-      m.putToData(key, value);
+      m.setData(new HashMap<CharSequence, CharSequence>());
+      m.getData().put(key, value);
       
-      byte[] datumBytes = HBaseByteInterface.toBytes(m, Metadata._SCHEMA);
-      Metadata m2 = (Metadata) HBaseByteInterface.fromBytes(Metadata._SCHEMA, 
+      byte[] datumBytes = HBaseByteInterface.toBytes(m, Metadata.SCHEMA$);
+      Metadata m2 = (Metadata) HBaseByteInterface.fromBytes(Metadata.SCHEMA$, 
           datumBytes);
       
-      Assert.assertEquals(value, m2.getFromData(key));
+      Assert.assertEquals(value, m2.getData().get(key));
     }
   }
   

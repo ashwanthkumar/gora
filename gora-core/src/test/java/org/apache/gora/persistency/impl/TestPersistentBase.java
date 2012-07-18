@@ -25,7 +25,9 @@ import java.util.HashMap;
 
 import org.apache.avro.util.Utf8;
 import org.apache.gora.examples.generated.Employee;
+import org.apache.gora.examples.generated.ImmutableFields;
 import org.apache.gora.examples.generated.Metadata;
+import org.apache.gora.examples.generated.V2;
 import org.apache.gora.examples.generated.WebPage;
 import org.apache.gora.memory.store.MemStore;
 import org.apache.gora.store.DataStoreFactory;
@@ -39,55 +41,54 @@ import org.junit.Test;
  * Testcase for PersistentBase class
  */
 public class TestPersistentBase {
-  
+
   @Test
   public void testClear() {
-    
-    //test clear all fields
+
+    // test clear all fields
     WebPage page = new WebPage();
     page.setUrl(new Utf8("http://foo.com"));
     page.setParsedContent(new ArrayList<CharSequence>());
     page.getParsedContent().add(new Utf8("foo"));
+    page.setOutlinks(new HashMap<CharSequence, CharSequence>());
     page.getOutlinks().put(new Utf8("foo"), new Utf8("bar"));
     page.setContent(ByteBuffer.wrap("foo baz bar".getBytes()));
-    
+
     page.clear();
-    
+
     Assert.assertNull(page.getUrl());
-    Assert.assertEquals(0, page.getParsedContent().size());
-    Assert.assertEquals(0, page.getOutlinks().size());
+    Assert.assertNull(page.getParsedContent());
+    Assert.assertNull(page.getOutlinks());
     Assert.assertNull(page.getContent());
-    
-    //set fields again
+
+    // set fields again
     page.setUrl(new Utf8("http://bar.com"));
+    page.setParsedContent(new ArrayList<CharSequence>());
     page.getParsedContent().add(new Utf8("bar"));
+    page.setOutlinks(new HashMap<CharSequence, CharSequence>());
     page.getOutlinks().put(new Utf8("bar"), new Utf8("baz"));
     page.setContent(ByteBuffer.wrap("foo baz bar barbaz".getBytes()));
-    
-    //test clear new object
+
+    // test clear new object
     page = new WebPage();
     page.clear();
-    
-    //test primitive fields
+
+    // test primitive fields
     Employee employee = new Employee();
     employee.clear();
   }
-  
-  @Test public void checksFieldsRecursivelyForDirtyness(){
-    WebPage webpage = new WebPage();
-    webpage.setMetadata(new Metadata());
-    webpage.clearDirty();
-    webpage.getMetadata().setData(new HashMap<CharSequence, CharSequence>());
-    Assert.assertTrue(webpage.isDirty());
+
+  @Test
+  public void checksFieldsRecursivelyForDirtyness() {
+    ImmutableFields fields = ImmutableFields.newBuilder().setV1(5)
+        .setV2(V2.newBuilder().setV3(10).build()).build();
+    fields.clearDirty();
+    Assert.assertFalse(fields.isDirty());
+    fields.getV2().setV3(3);
+    Assert.assertTrue(fields.isDirty());
+    fields.clear();
+    Assert.assertFalse(fields.isDirty());
   }
-  
-  @Test public void recursiveClears(){
-    WebPage webpage = new WebPage();
-    webpage.setMetadata(new Metadata());
-    webpage.getMetadata().setData(new HashMap<CharSequence, CharSequence>());
-    webpage.getMetadata().getData().put("foo", "bar");
-    webpage.clearDirty();
-    Assert.assertFalse(webpage.isDirty());
-  }
-  
+
+
 }

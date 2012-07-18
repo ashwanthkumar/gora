@@ -21,7 +21,8 @@ import java.nio.ByteBuffer;
 import java.util.List;
 
 import org.apache.avro.Schema.Field;
-import org.apache.avro.Schema.Type;
+import org.apache.avro.specific.SpecificData;
+import org.apache.avro.specific.SpecificRecord;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.gora.persistency.Dirtyable;
 import org.apache.gora.persistency.Persistent;
@@ -32,12 +33,43 @@ import org.apache.gora.persistency.Persistent;
 public abstract class PersistentBase extends SpecificRecordBase implements
     Persistent {
 
+  public static class PersistentData extends SpecificData {
+    private static final PersistentData INSTANCE = new PersistentData();
+
+    public static PersistentData get() {
+      return INSTANCE;
+    }
+
+    public boolean equals(SpecificRecord obj1, SpecificRecord that) {
+      if (that == obj1)
+        return true; // identical object
+      if (!(that instanceof SpecificRecord))
+        return false; // not a record
+      if (obj1.getClass() != that.getClass())
+        return false; // not same schema
+      return PersistentData.get().compare(obj1, that, obj1.getSchema(), true) == 0;
+    }
+
+  }
+
   @Override
   public void clearDirty() {
     ByteBuffer dirtyBytes = getDirtyBytes();
     assert (dirtyBytes.position() == 0);
     for (int i = 0; i < dirtyBytes.limit(); i++) {
       dirtyBytes.put(i, (byte) 0);
+    }
+    for (Field field : getSchema().getFields()) {
+      clearDirynessIfFieldIsDirtyable(field.pos());
+    }
+  }
+
+  private void clearDirynessIfFieldIsDirtyable(int fieldIndex) {
+    if (fieldIndex == 0)
+      return;
+    Object value = get(fieldIndex);
+    if (value instanceof Dirtyable) {
+      ((Dirtyable) value).clearDirty();
     }
   }
 
@@ -50,6 +82,7 @@ public abstract class PersistentBase extends SpecificRecordBase implements
     byte currentByte = dirtyBytes.get(byteOffset);
     currentByte = (byte) ((~(1 << bitOffset)) & currentByte);
     dirtyBytes.put(byteOffset, currentByte);
+    clearDirynessIfFieldIsDirtyable(fieldIndex);
   }
 
   @Override
@@ -62,13 +95,7 @@ public abstract class PersistentBase extends SpecificRecordBase implements
     List<Field> fields = getSchema().getFields();
     boolean isSubRecordDirty = false;
     for (Field field : fields) {
-      switch (field.schema().getType()) {
-      case RECORD:
-      case MAP:
-      case ARRAY:
-        isSubRecordDirty |= ((Dirtyable) get(field.pos())).isDirty();
-        break;
-      }
+      isSubRecordDirty = isSubRecordDirty || checkIfMutableFieldAndDirty(field);
     }
     ByteBuffer dirtyBytes = getDirtyBytes();
     assert (dirtyBytes.position() == 0);
@@ -79,13 +106,34 @@ public abstract class PersistentBase extends SpecificRecordBase implements
     return isSubRecordDirty | dirty;
   }
 
+  private boolean checkIfMutableFieldAndDirty(Field field) {
+    if (field.pos() == 0)
+      return false;
+    switch (field.schema().getType()) {
+    case RECORD:
+    case MAP:
+    case ARRAY:
+      return ((Dirtyable) get(field.pos())).isDirty();
+    case STRING:
+      // TODO: no good way to check Utf8's for dirtyness. Perhaps aspectj? Or
+      // replace with Custom gora extension?
+      return true;
+    case BYTES:
+      // TODO: no good way to check ByteBuffers for dirtyness. Perhaps aspectj?
+      return true;
+    case UNION:
+      Object value = get(field.pos());
+      if (value instanceof Dirtyable) {
+        return ((Dirtyable) value).isDirty();
+      }
+    }
+    return false;
+  }
+
   @Override
   public boolean isDirty(int fieldIndex) {
     Field field = getSchema().getFields().get(fieldIndex);
-    boolean isSubRecordDirty = false;
-    if (field.schema().getType() == Type.RECORD) {
-      isSubRecordDirty = ((PersistentBase) get(fieldIndex)).isDirty();
-    }
+    boolean isSubRecordDirty = checkIfMutableFieldAndDirty(field);
     ByteBuffer dirtyBytes = getDirtyBytes();
     assert (dirtyBytes.position() == 0);
     int byteOffset = fieldIndex / 8;
@@ -95,8 +143,12 @@ public abstract class PersistentBase extends SpecificRecordBase implements
   }
 
   @Override
-  public boolean isDirty(String field) {
-    return isDirty(getSchema().getField(field).pos());
+  public boolean isDirty(String fieldName) {
+    Field field = getSchema().getField(fieldName);
+    if(field == null){
+      throw new IndexOutOfBoundsException("Field "+ fieldName + " does not exist in this schema.");
+    }
+    return isDirty(field.pos());
   }
 
   @Override
@@ -130,11 +182,36 @@ public abstract class PersistentBase extends SpecificRecordBase implements
 
   @Override
   public void clear() {
-    int numFields = getSchema().getFields().size();
-    for (int i = 1; i < numFields; i++) {
-      put(i, null);
+    for (Field field : getSchema().getFields()) {
+      if (field.pos() == 0)
+        continue;
+      switch (field.schema().getType()) {
+      /*
+       * TODO: Its more in the spirit of Gora's clear method to actually clear
+       * data structures, but since avro no-longer defaults to having empty
+       * structures the way to do this consistently would be complicated.
+       */
+      case MAP:
+      case ARRAY:
+      case STRING:
+      case BYTES:
+      case UNION:
+      case RECORD:
+        put(field.pos(), null);
+        break;
+      }
     }
     clearDirty();
   }
 
+  @Override
+  public boolean equals(Object that) {
+    if (that == this) {
+      return true;
+    } else if (that instanceof Persistent) {
+      return PersistentData.get().equals(this, (SpecificRecord) that);
+    } else {
+      return false;
+    }
+  }
 }

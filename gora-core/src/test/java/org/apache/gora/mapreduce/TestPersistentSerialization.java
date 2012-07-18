@@ -18,6 +18,9 @@
 
 package org.apache.gora.mapreduce;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+
 import junit.framework.Assert;
 
 import org.apache.avro.util.Utf8;
@@ -32,8 +35,9 @@ import org.apache.gora.util.TestIOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Test;
 
-/** Test class for {@link PersistentSerialization}, {@link PersistentSerializer}
- *  and {@link PersistentDeserializer}
+/**
+ * Test class for {@link PersistentSerialization}, {@link PersistentSerializer}
+ * and {@link PersistentDeserializer}
  */
 public class TestPersistentSerialization {
 
@@ -76,8 +80,8 @@ public class TestPersistentSerialization {
 
     Result<String, WebPage> result = store.newQuery().execute();
 
-    int i=0;
-    while(result.next()) {
+    int i = 0;
+    while (result.next()) {
       WebPage page = result.get();
       TestIOUtils.testSerializeDeserialize(page);
       i++;
@@ -94,9 +98,9 @@ public class TestPersistentSerialization {
     page1.setUrl(new Utf8("foo"));
     page2.setUrl(new Utf8("baz"));
     page3.setUrl(new Utf8("bar"));
-
+    page1.setParsedContent(new ArrayList<CharSequence>());
     page1.getParsedContent().add(new Utf8("coo"));
-
+    page2.setOutlinks(new HashMap<CharSequence, CharSequence>());
     page2.getOutlinks().put(new Utf8("a"), new Utf8("b"));
 
     TestIOUtils.testSerializeDeserialize(page1, page2, page3);

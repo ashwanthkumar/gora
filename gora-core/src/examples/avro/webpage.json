@@ -4,10 +4,10 @@
   "namespace": "org.apache.gora.examples.generated",
   "fields" : [
     {"name": "url", "type": "string"},
-    {"name": "content", "type": "bytes"},
-    {"name": "parsedContent", "type": {"type":"array", "items": "string"}},
-    {"name": "outlinks", "type": {"type":"map", "values":"string"}},
-    {"name": "metadata", "type": {
+    {"name": "content", "type": ["bytes","null"]},
+    {"name": "parsedContent", "type": [{"type":"array", "items": "string"},"null"]},
+    {"name": "outlinks", "type": [{"type":"map", "values":"string"},"null"]},
+    {"name": "metadata", "type": [{
       "name": "Metadata",
       "type": "record",
       "namespace": "org.apache.gora.examples.generated",
@@ -15,6 +15,7 @@
         {"name": "version", "type": "int"},
         {"name": "data", "type": {"type": "map", "values": "string"}}
       ]
-    }}
+    },"null"]
+    }
   ]
 }

@@ -61,8 +61,8 @@ public class GoraCompiler extends SpecificCompiler {
 
   public static String generateDirtyMethod(Schema schema, Field field) {
     /*
-     * TODO: this is dirty. We need to file a bug in avro to get them to open
-     * the API so other compilers can use their utility methods
+     * TODO: See AVRO-1127. This is dirty. We need to file a bug in avro to get
+     * them to open the API so other compilers can use their utility methods
      */
     String getMethod = generateGetMethod(schema, field);
     String dirtyMethod = "is" + getMethod.substring(3) + "Dirty";
@@ -90,6 +90,43 @@ public class GoraCompiler extends SpecificCompiler {
 
   private static Schema getSchemaWithDirtySupport(Schema originalSchema)
       throws IOException {
+    switch (originalSchema.getType()) {
+    case RECORD:
+      return getRecordSchemaWithDirtySupport(originalSchema);
+    case UNION:
+      return getUnionSchemaWithDirtySupport(originalSchema);
+    case MAP:
+      return getMapSchemaWithDirtySupport(originalSchema);
+    case ARRAY:
+      return getArraySchemaWithDirtySupport(originalSchema);
+    default:
+      return originalSchema;
+    }
+  }
+
+  private static Schema getArraySchemaWithDirtySupport(Schema originalSchema)
+      throws IOException {
+    return Schema.createArray(getSchemaWithDirtySupport(originalSchema.getElementType()));
+  }
+
+  private static Schema getMapSchemaWithDirtySupport(Schema originalSchema)
+      throws IOException {
+    return Schema.createMap(getSchemaWithDirtySupport(originalSchema.getValueType()));
+  }
+
+  private static Schema getUnionSchemaWithDirtySupport(Schema originalSchema)
+      throws IOException {
+    List<Schema> schemaTypes = originalSchema.getTypes();
+    List<Schema> newTypeSchemas = new ArrayList<Schema>();
+    for (int i = 0; i < schemaTypes.size(); i++) {
+      Schema currentTypeSchema = schemaTypes.get(i);
+      newTypeSchemas.add(getSchemaWithDirtySupport(currentTypeSchema));
+    }
+    return Schema.createUnion(newTypeSchemas);
+  }
+
+  private static Schema getRecordSchemaWithDirtySupport(Schema originalSchema)
+      throws IOException {
     if (originalSchema.getType() != Type.RECORD) {
       throw new IOException("Gora only supports record schemas.");
     }
@@ -115,18 +152,11 @@ public class GoraCompiler extends SpecificCompiler {
         defaultDirtyJsonValue);
     newFields.add(dirtyBits);
     for (Field originalField : originalFields) {
-      Field newField;
-      if (originalField.schema().getType() != Type.RECORD) {
-        newField = new Field(originalField.name(), originalField.schema(),
-            originalField.doc(), originalField.defaultValue(),
-            originalField.order());
-      } else {
-        // recursively add dirty support
-        newField = new Field(originalField.name(),
-            getSchemaWithDirtySupport(originalField.schema()),
-            originalField.doc(), originalField.defaultValue(),
-            originalField.order());
-      }
+      // recursively add dirty support
+      Field newField = new Field(originalField.name(),
+          getSchemaWithDirtySupport(originalField.schema()),
+          originalField.doc(), originalField.defaultValue(),
+          originalField.order());
       newFields.add(newField);
     }
     newSchema.setFields(newFields);

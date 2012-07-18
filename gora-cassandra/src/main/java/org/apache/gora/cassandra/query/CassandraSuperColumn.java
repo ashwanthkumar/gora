@@ -114,7 +114,7 @@ public class CassandraSuperColumn extends CassandraColumn {
             CassandraSubColumn cassandraColumn = new CassandraSubColumn();
             cassandraColumn.setField(memberField);
             cassandraColumn.setValue(hColumn);
-            record.put(record.getFieldIndex(memberName), cassandraColumn.getValue());
+            record.put(record.getSchema().getField(memberName).pos(), cassandraColumn.getValue());
           }
         }
         break;

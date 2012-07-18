@@ -46,7 +46,7 @@ public class PersistentSerializer implements Serializer<Persistent> {
 
   @Override
   public void open(OutputStream out) throws IOException {
-    encoder = EncoderFactory.get().binaryEncoder(out, null);
+    encoder = EncoderFactory.get().directBinaryEncoder(out, null);
   }
 
   @Override

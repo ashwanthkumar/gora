@@ -82,7 +82,7 @@ public class CassandraResult<K, T extends Persistent> extends ResultBase<K, T> {
       String fieldName = this.reverseMap.get(family + ":" + StringSerializer.get().fromByteBuffer(cassandraColumn.getName()));
       
       // get field
-      int pos = this.persistent.getFieldIndex(fieldName);
+      int pos = this.persistent.getSchema().getField(fieldName).pos();
       Field field = fields.get(pos);
       
       // get value
