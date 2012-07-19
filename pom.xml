@@ -284,44 +284,36 @@
               <autoVersionSubmodules>true</autoVersionSubmodules>
             </configuration>
           </plugin>
-			<plugin>
-				<groupId>org.eclipse.m2e</groupId>
-				<artifactId>lifecycle-mapping</artifactId>
-				<version>1.0.0</version>
-				<configuration>
-					<lifecycleMappingMetadata>
-						<pluginExecutions>
-							<pluginExecution>
-								<pluginExecutionFilter>
-									<groupId>org.apache.maven.plugins</groupId>
-									<artifactId>maven-dependency-plugin</artifactId>
-									<versionRange>${maven-dependency-plugin.version}</versionRange>
-									<goals>
-										<goal>copy-dependencies</goal>
-									</goals>
-								</pluginExecutionFilter>
-								<action>
-									<ignore />
-								</action>
-							</pluginExecution>
-							<pluginExecution>
-								<pluginExecutionFilter>
-									<groupId>org.codehaus.mojo</groupId>
-									<artifactId>build-helper-maven-plugin</artifactId>
-									<versionRange>${build-helper-maven-plugin.version}</versionRange>
-									<goals>
-										<goal>reserve-network-port</goal>
-									</goals>
-								</pluginExecutionFilter>
-								<action>
-									<ignore />
-								</action>
-							</pluginExecution>
-						</pluginExecutions>
-					</lifecycleMappingMetadata>
-				</configuration>
-			</plugin>
-        </plugins>
+          <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+          <plugin>
+          	<groupId>org.eclipse.m2e</groupId>
+          	<artifactId>lifecycle-mapping</artifactId>
+          	<version>1.0.0</version>
+          	<configuration>
+          		<lifecycleMappingMetadata>
+          			<pluginExecutions>
+          				<pluginExecution>
+          					<pluginExecutionFilter>
+          						<groupId>
+          							org.apache.maven.plugins
+          						</groupId>
+          						<artifactId>
+          							maven-dependency-plugin
+          						</artifactId>
+          						<versionRange>[2.4,)</versionRange>
+          						<goals>
+          							<goal>copy-dependencies</goal>
+          						</goals>
+          					</pluginExecutionFilter>
+          					<action>
+          						<ignore></ignore>
+          					</action>
+          				</pluginExecution>
+          			</pluginExecutions>
+          		</lifecycleMappingMetadata>
+          	</configuration>
+          </plugin>
+	</plugins>
 	</pluginManagement>
         <plugins>
             <plugin>
@@ -330,7 +322,7 @@
                 <version>${maven-compiler-plugin.version}</version>
                 <inherited>true</inherited>
                 <configuration>
-                    <source>${javac.source.version}</source>
+                    <source>${javac.src.version}</source>
                     <target>${javac.target.version}</target>
                 </configuration>
             </plugin>
@@ -403,15 +395,15 @@
                     </supportedProjectTypes>
                     <unpackBundle>true</unpackBundle>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>bundle-manifest</id>
-                        <phase>process-classes</phase>
-                        <goals>
-                            <goal>manifest</goal>
-                        </goals>
-                    </execution>
-                </executions>
+<!--                 <executions> -->
+<!--                     <execution> -->
+<!--                         <id>bundle-manifest</id> -->
+<!--                         <phase>process-classes</phase> -->
+<!--                         <goals> -->
+<!--                             <goal>manifest</goal> -->
+<!--                         </goals> -->
+<!--                     </execution> -->
+<!--                 </executions> -->
             </plugin>
          </plugins>
     </build>
@@ -580,7 +572,8 @@
         <!-- Maven Plugin Dependencies -->
         <maven-compiler-plugin.version>2.3.2</maven-compiler-plugin.version>
         <maven-resources-plugin.version>2.5</maven-resources-plugin.version>
-        <maven-jar-plugin.version>2.4</maven-jar-plugin.version>
+        <!-- pegged at 2.3.2 for eclipse users, see https://github.com/sonatype/m2eclipse-extras/issues/10 -->
+        <maven-jar-plugin.version>2.3.2</maven-jar-plugin.version>
         <maven-dependency-plugin.version>2.4</maven-dependency-plugin.version>
         <build-helper-maven-plugin.version>1.7</build-helper-maven-plugin.version>
         <maven-surfire-plugin.version>2.12</maven-surfire-plugin.version>
