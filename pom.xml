@@ -309,6 +309,21 @@
           						<ignore></ignore>
           					</action>
           				</pluginExecution>
+          				<pluginExecution>
+          					<pluginExecutionFilter>
+          						<groupId>org.codehaus.mojo</groupId>
+          						<artifactId>
+          							build-helper-maven-plugin
+          						</artifactId>
+          						<versionRange>[1.7,)</versionRange>
+          						<goals>
+          							<goal>reserve-network-port</goal>
+          						</goals>
+          					</pluginExecutionFilter>
+          					<action>
+          						<ignore></ignore>
+          					</action>
+          				</pluginExecution>
           			</pluginExecutions>
           		</lifecycleMappingMetadata>
           	</configuration>
@@ -538,6 +553,8 @@
         <module>gora-sql</module>
         <module>gora-tutorial</module>
         <module>sources-dist</module>
+        <module>gora-compiler</module>
+        <module>gora-compiler-cli</module>
     </modules>
 
     <properties>
@@ -552,7 +569,7 @@
         <avro.version>1.7.0</avro.version>
         <cxf-rt-frontend-jaxrs.version>2.5.2</cxf-rt-frontend-jaxrs.version>
         <!-- Cassandra Dependencies -->
-        <cassandra.version>1.1.0</cassandra.version>
+        <cassandra.thrift.version>1.1.1</cassandra.thrift.version>
         <libthrift.version>0.7.0</libthrift.version>
         <hector.version>1.1-0</hector.version>
         <!-- Misc Dependencies -->
@@ -563,7 +580,7 @@
         <mysql.version>5.1.18</mysql.version>
         <xerces.version>2.9.1</xerces.version>
         <!-- Logging Dependencies -->
-        <slf4j.version>1.6.1</slf4j.version>
+        <slf4j.version>1.5.8</slf4j.version>
         <log4j.version>1.2.16</log4j.version>
 
         <!-- Testing Dependencies -->
@@ -605,6 +622,19 @@
             <artifactId>gora-core</artifactId>
             <version>${project.version}</version>
           </dependency>
+          
+          <dependency>
+            <groupId>org.apache.gora</groupId>
+            <artifactId>gora-compiler</artifactId>
+            <version>${project.version}</version>
+          </dependency>
+          
+          <dependency>
+            <groupId>org.apache.gora</groupId>
+            <artifactId>gora-compiler-cli</artifactId>
+            <version>${project.version}</version>
+          </dependency>
+          
           <dependency>
             <groupId>org.apache.gora</groupId>
             <artifactId>gora-core</artifactId>
@@ -617,13 +647,7 @@
             <artifactId>gora-cassandra</artifactId>
             <version>${project.version}</version>
           </dependency>
-          <dependency>
-            <groupId>org.apache.gora</groupId>
-            <artifactId>gora-cassandra</artifactId>
-            <version>${project.version}</version>
-            <classifier>tests</classifier>
-          </dependency>
-          
+
           <dependency>
             <groupId>org.apache.gora</groupId>
             <artifactId>gora-sql</artifactId>
@@ -742,48 +766,48 @@
 				</exclusions>
 			</dependency>
 
-            <dependency>
-                <groupId>org.apache.hbase</groupId>
-                <artifactId>hbase</artifactId>
-                <version>${hbase.version}</version>
-            </dependency>
+			<dependency>
+				<groupId>org.apache.hbase</groupId>
+				<artifactId>hbase</artifactId>
+				<version>${hbase.version}</version>
+				<exclusions>
+					<exclusion>
+						<artifactId>avro</artifactId>
+						<groupId>org.apache.hadoop</groupId>
+					</exclusion>
+				</exclusions>
+			</dependency>
             <dependency>
                 <groupId>org.apache.hbase</groupId>
                 <artifactId>hbase</artifactId>
                 <version>${hbase.version}</version>
                 <classifier>tests</classifier>
+                <exclusions>
+					<exclusion>
+						<artifactId>avro</artifactId>
+						<groupId>org.apache.hadoop</groupId>
+					</exclusion>
+				</exclusions>
             </dependency>
 
             <!-- Cassandra Dependencies -->
             <dependency>
                 <groupId>org.apache.cassandra</groupId>
-                <artifactId>cassandra-all</artifactId>
-                <version>${cassandra.version}</version>
-                <scope>test</scope>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.apache.cassandra.deps</groupId>
-    			<artifactId>avro</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            
-            <dependency>
-                <groupId>org.apache.cassandra</groupId>
                 <artifactId>cassandra-thrift</artifactId>
-                <version>${cassandra.version}</version>
+                <version>${cassandra.thrift.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>org.apache.cassandra</groupId>
+                <artifactId>cassandra-all</artifactId>
+                <scope>test</scope>
+                <version>${cassandra.thrift.version}</version>
+            </dependency>
+            
           <dependency>
             <groupId>org.hectorclient</groupId>
             <artifactId>hector-core</artifactId>
             <version>${hector.version}</version>
-            <exclusions>
-	      <exclusion>
-		<groupId>org.apache.cassandra</groupId>
-		<artifactId>cassandra-all</artifactId>
-	      </exclusion>
-	    </exclusions>
           </dependency>
 
             <!-- Misc Dependencies -->
@@ -894,7 +918,7 @@
                 <artifactId>junit</artifactId>
                 <version>${junit.version}</version>
             </dependency>
-            
+
         </dependencies>
     </dependencyManagement>
 

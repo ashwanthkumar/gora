@@ -30,6 +30,7 @@ import org.apache.avro.Schema.Type;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.util.Utf8;
@@ -46,24 +47,11 @@ public class HBaseByteInterface {
    */
   public static final ThreadLocal<BinaryDecoder> decoders =
       new ThreadLocal<BinaryDecoder>();
-  public static final ThreadLocal<BinaryEncoderWithStream> encoders =
-      new ThreadLocal<BinaryEncoderWithStream>();
+  public static final ThreadLocal<BinaryEncoder> encoders =
+      new ThreadLocal<BinaryEncoder>();
+  private static ThreadLocal<ByteArrayOutputStream> outputStream = 
+	  new ThreadLocal<ByteArrayOutputStream>();
   
-  /**
-   * A BinaryEncoder that exposes the outputstream so that it can be reset
-   * every time. (This is a workaround to reuse BinaryEncoder and the buffers,
-   * normally provided be EncoderFactory, but this class does not exist yet 
-   * in the current Avro version).
-   */
-  public static final class BinaryEncoderWithStream extends BinaryEncoder {
-    public BinaryEncoderWithStream(OutputStream out) {
-      super(out);
-    }
-    
-    protected OutputStream getOut() {
-      return out;
-    }
-  }
   
   /*
    * Create a threadlocal map for the datum readers and writers, because
@@ -191,13 +179,15 @@ public class HBaseByteInterface {
         writerMap.put(schema.getFullName(),writer);
       }
       
-      BinaryEncoderWithStream encoder = encoders.get();
+      BinaryEncoder encoder = encoders.get();
       if (encoder == null) {
-        encoder = new BinaryEncoderWithStream(new ByteArrayOutputStream());
+    	ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        outputStream.set(bos);
+        encoder = EncoderFactory.get().directBinaryEncoder(bos, null);
         encoders.set(encoder);
       }
       //reset the buffers
-      ByteArrayOutputStream os = (ByteArrayOutputStream) encoder.getOut();
+      ByteArrayOutputStream os = outputStream.get();
       os.reset();
       
       writer.write(o, encoder);
