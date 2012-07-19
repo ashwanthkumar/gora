@@ -41,6 +41,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericArray;
+import org.apache.avro.specific.SpecificData;
 import org.apache.avro.specific.SpecificFixed;
 import org.apache.avro.util.Utf8;
 import org.apache.gora.cassandra.query.CassandraQuery;
@@ -53,7 +54,6 @@ import org.apache.gora.persistency.ListGenericArray;
 import org.apache.gora.persistency.Persistent;
 import org.apache.gora.persistency.StatefulHashMap;
 import org.apache.gora.persistency.impl.PersistentBase;
-import org.apache.gora.persistency.impl.StateManagerImpl;
 import org.apache.gora.query.PartitionQuery;
 import org.apache.gora.query.Query;
 import org.apache.gora.query.Result;
@@ -275,7 +275,7 @@ public class CassandraStore<K, T extends Persistent> extends DataStoreBase<K, T>
    */
   @Override
   public void put(K key, T value) throws IOException {
-    T p = (T) value.newInstance(new StateManagerImpl());
+    T p = (T) SpecificData.get().newRecord(value, value.getSchema());
     Schema schema = value.getSchema();
     for (Field field: schema.getFields()) {
       int fieldPos = field.pos();
@@ -288,7 +288,7 @@ public class CassandraStore<K, T extends Persistent> extends DataStoreBase<K, T>
         switch(type) {
           case RECORD:
             Persistent persistent = (Persistent) fieldValue;
-            Persistent newRecord = persistent.newInstance(new StateManagerImpl());
+            Persistent newRecord = (Persistent) SpecificData.get().newRecord(persistent, persistent.getSchema());
             for (Field member: fieldSchema.getFields()) {
               newRecord.put(member.pos(), persistent.get(member.pos()));
             }
