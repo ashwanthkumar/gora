@@ -17,64 +17,94 @@
  */
 package org.apache.gora.persistency;
 
+import java.util.List;
+
+import org.apache.avro.Schema.Field;
 import org.apache.avro.specific.SpecificRecord;
 
 /**
  * Objects that are persisted by Gora implements this interface.
  */
 public interface Persistent extends SpecificRecord, Dirtyable {
-  
 
   public static String DIRTY_BYTES_FIELD_NAME = "__g__dirty";
-  
+
   /**
-   * Clears the inner state of the object without any modification
-   * to the actual data on the data store. This method should be called 
-   * before re-using the object to hold the data for another result.  
+   * Clears the inner state of the object without any modification to the actual
+   * data on the data store. This method should be called before re-using the
+   * object to hold the data for another result.
    */
   void clear();
-  
+
   /**
    * Returns whether the field has been modified.
-   * @param fieldIndex the offset of the field in the object
+   * 
+   * @param fieldIndex
+   *          the offset of the field in the object
    * @return whether the field has been modified.
    */
   boolean isDirty(int fieldIndex);
 
   /**
    * Returns whether the field has been modified.
-   * @param field the name of the field
+   * 
+   * @param field
+   *          the name of the field
    * @return whether the field has been modified.
    */
   boolean isDirty(String field);
-  
+
   /**
    * Sets all the fields of the object as dirty.
    */
   void setDirty();
-  
+
   /**
    * Sets the field as dirty.
-   * @param fieldIndex the offset of the field in the object
+   * 
+   * @param fieldIndex
+   *          the offset of the field in the object
    */
   void setDirty(int fieldIndex);
- 
+
   /**
    * Sets the field as dirty.
-   * @param field the name of the field
+   * 
+   * @param field
+   *          the name of the field
    */
   void setDirty(String field);
-  
+
   /**
    * Clears the field as dirty.
-   * @param fieldIndex the offset of the field in the object
+   * 
+   * @param fieldIndex
+   *          the offset of the field in the object
    */
   void clearDirty(int fieldIndex);
-  
+
   /**
    * Clears the field as dirty.
-   * @param field the name of the field
+   * 
+   * @param field
+   *          the name of the field
    */
   void clearDirty(String field);
-  
+
+  /**
+   * Get an object which can be used to mark this field as deleted (rather than
+   * state unknown, which is indicated by null).
+   * 
+   * @return a tombstone.
+   */
+  public abstract Tombstone getTombstone();
+
+  /**
+   * Get a list of fields from this persistent object's schema that are not
+   * managed by Gora.
+   * 
+   * @return the unmanaged fields
+   */
+  public List<Field> getUnmanagedFields();
+
 }

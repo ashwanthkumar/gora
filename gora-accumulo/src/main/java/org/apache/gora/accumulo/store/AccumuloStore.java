@@ -37,6 +37,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import org.apache.accumulo.core.Constants;
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
+import org.apache.accumulo.core.client.BatchDeleter;
 import org.apache.accumulo.core.client.BatchWriter;
 import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.IsolatedScanner;
@@ -63,6 +64,7 @@ import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.iterators.SortedKeyIterator;
 import org.apache.accumulo.core.iterators.user.TimestampFilter;
 import org.apache.accumulo.core.master.state.tables.TableState;
+import org.apache.accumulo.core.security.Authorizations;
 import org.apache.accumulo.core.security.ColumnVisibility;
 import org.apache.accumulo.core.security.thrift.AuthInfo;
 import org.apache.accumulo.core.util.Pair;
@@ -78,14 +80,14 @@ import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.util.Utf8;
+import org.apache.commons.httpclient.auth.AuthScheme;
 import org.apache.gora.accumulo.encoders.Encoder;
 import org.apache.gora.accumulo.query.AccumuloQuery;
 import org.apache.gora.accumulo.query.AccumuloResult;
-import org.apache.gora.persistency.ListGenericArray;
 import org.apache.gora.persistency.Persistent;
-import org.apache.gora.persistency.State;
-import org.apache.gora.persistency.StatefulHashMap;
-import org.apache.gora.persistency.StatefulMap;
+import org.apache.gora.persistency.Tombstones;
+import org.apache.gora.persistency.Tombstones.MapTombstone;
+import org.apache.gora.persistency.impl.PersistentBase;
 import org.apache.gora.query.PartitionQuery;
 import org.apache.gora.query.Query;
 import org.apache.gora.query.Result;
@@ -115,6 +117,7 @@ public class AccumuloStore<K,T extends Persistent> extends DataStoreBase<K,T> {
   private AccumuloMapping mapping;
   private AuthInfo authInfo;
   private Encoder encoder;
+  private BatchDeleter batchDeleter;
   
   public Object fromBytes(Schema schema, byte data[]) {
     return fromBytes(encoder, schema, data);
@@ -405,7 +408,7 @@ public class AccumuloStore<K,T extends Persistent> extends DataStoreBase<K,T> {
           currentArray.add(fromBytes(currentSchema, entry.getValue().get()));
           continue;
         } else {
-          persistent.put(currentPos, new ListGenericArray<T>(currentField.schema(), currentArray));
+          persistent.put(currentPos, new ArrayList<T>(currentArray));
           currentArray = null;
         }
       }
@@ -421,7 +424,7 @@ public class AccumuloStore<K,T extends Persistent> extends DataStoreBase<K,T> {
 
       switch (field.schema().getType()) {
         case MAP:
-          currentMap = new StatefulHashMap();
+          currentMap = new HashMap();
           currentPos = field.pos();
           currentFam = entry.getKey().getColumnFamily();
           currentSchema = field.schema().getValueType();
@@ -454,7 +457,7 @@ public class AccumuloStore<K,T extends Persistent> extends DataStoreBase<K,T> {
     if (currentMap != null) {
       persistent.put(currentPos, currentMap);
     } else if (currentArray != null) {
-      persistent.put(currentPos, new ListGenericArray<T>(currentField.schema(), currentArray));
+      persistent.put(currentPos, new ArrayList<T>(currentArray));
     }
 
     persistent.clearDirty();
@@ -497,73 +500,78 @@ public class AccumuloStore<K,T extends Persistent> extends DataStoreBase<K,T> {
   @Override
   public void put(K key, T val) throws IOException {
 
-    Mutation m = new Mutation(new Text(toBytes(key)));
+    byte[] keyBytes = toBytes(key);
+    Mutation m = new Mutation(new Text(keyBytes));
+    List<Range> batchDeletions = new ArrayList<Range>();
     
     Schema schema = val.getSchema();
     
-    List<Field> fields = schema.getFields();
-    
     int count = 0;
-    for (int i = 1; i<fields.size(); i++) {
-      Field field = fields.get(i);
-      if (!val.isDirty(i)) {
+    for (Field field : val.getUnmanagedFields()) {
+      if (!val.isDirty(field.pos())) {
         continue;
       }
       
-      Object o = val.get(i);
+      Object o = val.get(field.pos());
       Pair<Text,Text> col = mapping.fieldMap.get(field.name());
 
       switch (field.schema().getType()) {
         case MAP:
-          if (o instanceof StatefulMap) {
-            StatefulMap map = (StatefulMap) o;
-            Set<?> es = map.states().entrySet();
-            for (Object entry : es) {
-              Object mapKey = ((Entry) entry).getKey();
-              State state = (State) ((Entry) entry).getValue();
-
-              switch (state) {
-                case NEW:
-                case DIRTY:
-                  m.put(col.getFirst(), new Text(toBytes(mapKey)), new Value(toBytes(map.get(mapKey))));
-                  count++;
-                  break;
-                case DELETED:
-                  m.putDelete(col.getFirst(), new Text(toBytes(mapKey)));
-                  count++;
-                  break;
-              }
-              
-            }
+          if (Tombstones.isTombstone(o)) {
+            Text family = col.getFirst();
+            Key startAndEnd = new Key(new Text(keyBytes), family);
+            batchDeletions.add(new Range(startAndEnd, true, startAndEnd, true));
           } else {
             Map map = (Map) o;
             Set<?> es = map.entrySet();
             for (Object entry : es) {
+              Object mapVal  =((Entry)entry).getValue();
               Object mapKey = ((Entry) entry).getKey();
-              Object mapVal = ((Entry) entry).getValue();
-              m.put(col.getFirst(), new Text(toBytes(mapKey)), new Value(toBytes(mapVal)));
+              if(Tombstones.isTombstone(mapVal)){
+                m.putDelete(col.getFirst(), new Text(toBytes(mapKey)));
+              } else {
+                m.put(col.getFirst(), new Text(toBytes(mapKey)), new Value(toBytes(mapVal)));
+              }
               count++;
             }
           }
           break;
         case ARRAY:
-          GenericArray array = (GenericArray) o;
-          int j = 0;
-          for (Object item : array) {
-            m.put(col.getFirst(), new Text(toBytes(j++)), new Value(toBytes(item)));
-            count++;
+          if(Tombstones.isTombstone(o)){
+            Key cfKey = new Key(new Text(keyBytes), col.getFirst());
+            batchDeletions.add(new Range(cfKey, true, cfKey, true));
+          } else {
+            List array = (List) o;
+            int j = 0;
+            for (Object item : array) {
+              if(Tombstones.isTombstone(item)){
+                m.putDelete(col.getFirst(), new Text(toBytes(j++)));
+              } else {
+                m.put(col.getFirst(), new Text(toBytes(j++)), new Value(toBytes(item)));
+              }
+              count++;
+            }
           }
           break;
         case RECORD:
-          SpecificDatumWriter writer = new SpecificDatumWriter(field.schema());
-          ByteArrayOutputStream os = new ByteArrayOutputStream();
-          BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(os, null);
-          writer.write(o, encoder);
-          encoder.flush();
-          m.put(col.getFirst(), col.getSecond(), new Value(os.toByteArray()));
+          if(Tombstones.isTombstone(o)){
+            m.putDelete(col.getFirst(), col.getSecond());
+          } else {
+            SpecificDatumWriter writer = new SpecificDatumWriter(field.schema());
+            ByteArrayOutputStream os = new ByteArrayOutputStream();
+            BinaryEncoder encoder = EncoderFactory.get().directBinaryEncoder(os, null);
+            writer.write(o, encoder);
+            encoder.flush();
+            m.put(col.getFirst(), col.getSecond(), new Value(os.toByteArray()));
+          }
+          count++;
           break;
         default:
-          m.put(col.getFirst(), col.getSecond(), new Value(toBytes(o)));
+          if(Tombstones.isTombstone(o)){
+            m.putDelete(col.getFirst(), col.getSecond());
+          } else {
+            m.put(col.getFirst(), col.getSecond(), new Value(toBytes(o)));
+          }
           count++;
       }
 
@@ -575,8 +583,29 @@ public class AccumuloStore<K,T extends Persistent> extends DataStoreBase<K,T> {
       } catch (MutationsRejectedException e) {
         throw new IOException(e);
       }
+    if(batchDeletions.size()>0){
+      try {
+        getBatchDeleter().setRanges(batchDeletions);
+        getBatchDeleter().delete();
+      } catch (MutationsRejectedException e) {
+        throw new IOException(e);
+      } catch (TableNotFoundException e) {
+        throw new IOException(e);
+      }
+    }
   }
   
+  private BatchDeleter getBatchDeleter() throws IOException {
+    if (batchDeleter == null)
+      try {
+        batchDeleter = conn.createBatchDeleter(mapping.tableName,
+            new Authorizations(), 50, 100000l, 1000l, 50);
+      } catch (TableNotFoundException e) {
+        throw new IOException(e);
+      }
+    return batchDeleter;
+  }
+
   @Override
   public boolean delete(K key) throws IOException {
     Query<K,T> q = newQuery();

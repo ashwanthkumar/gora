@@ -30,49 +30,44 @@ import me.prettyprint.cassandra.serializers.BytesArraySerializer;
 import me.prettyprint.cassandra.serializers.IntegerSerializer;
 import me.prettyprint.hector.api.Serializer;
 import me.prettyprint.hector.api.ddl.ComparatorType;
-import static me.prettyprint.hector.api.ddl.ComparatorType.UTF8TYPE;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
-import org.apache.avro.specific.SpecificFixed;
-import org.apache.avro.util.Utf8;
-import org.apache.gora.persistency.StatefulHashMap;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * A StatefulHashMapSerializer translates the byte[] to and from StatefulHashMap of Avro.
  */
-public class StatefulHashMapSerializer<T> extends AbstractSerializer<StatefulHashMap<Utf8, T>> {
+public class MapSerializer<T> extends AbstractSerializer<Map<CharSequence, T>> {
 
-  public static final Logger LOG = LoggerFactory.getLogger(StatefulHashMapSerializer.class);
+  public static final Logger LOG = LoggerFactory.getLogger(MapSerializer.class);
 
-  private static Map<Type, StatefulHashMapSerializer> valueTypeToSerializerMap = new HashMap<Type, StatefulHashMapSerializer>();
-  private static Map<Class, StatefulHashMapSerializer> fixedClassToSerializerMap = new HashMap<Class, StatefulHashMapSerializer>();
+  private static Map<Type, MapSerializer> valueTypeToSerializerMap = new HashMap<Type, MapSerializer>();
+  private static Map<Class, MapSerializer> fixedClassToSerializerMap = new HashMap<Class, MapSerializer>();
 
-  public static StatefulHashMapSerializer get(Type valueType) {
-    StatefulHashMapSerializer serializer = valueTypeToSerializerMap.get(valueType);
+  public static MapSerializer get(Type valueType) {
+    MapSerializer serializer = valueTypeToSerializerMap.get(valueType);
     if (serializer == null) {
-      serializer = new StatefulHashMapSerializer(valueType);
+      serializer = new MapSerializer(valueType);
       valueTypeToSerializerMap.put(valueType, serializer);
     }
     return serializer;
   }
 
-  public static StatefulHashMapSerializer get(Type valueType, Class clazz) {
+  public static MapSerializer get(Type valueType, Class clazz) {
     if (valueType != Type.FIXED) {
       return null;
     }
-    StatefulHashMapSerializer serializer = valueTypeToSerializerMap.get(clazz);
+    MapSerializer serializer = valueTypeToSerializerMap.get(clazz);
     if (serializer == null) {
-      serializer = new StatefulHashMapSerializer(clazz);
+      serializer = new MapSerializer(clazz);
       fixedClassToSerializerMap.put(clazz, serializer);
     }
     return serializer;
   }
 
-  public static StatefulHashMapSerializer get(Schema valueSchema) {
+  public static MapSerializer get(Schema valueSchema) {
     Type type = valueSchema.getType();
     if (type == Type.FIXED) {
       return get(Type.FIXED, TypeUtils.getClass(valueSchema));
@@ -87,18 +82,18 @@ public class StatefulHashMapSerializer<T> extends AbstractSerializer<StatefulHas
   private Class<T> clazz = null;
   private Serializer<T> valueSerializer = null;
 
-  public StatefulHashMapSerializer(Serializer<T> valueSerializer) {
+  public MapSerializer(Serializer<T> valueSerializer) {
     this.valueSerializer = valueSerializer;
   }
 
-  public StatefulHashMapSerializer(Schema valueSchema) {
+  public MapSerializer(Schema valueSchema) {
     this.valueSchema = valueSchema;
     valueType = valueSchema.getType();
     size = TypeUtils.getFixedSize(valueSchema);
     valueSerializer = GoraSerializerTypeInferer.getSerializer(valueSchema);
   }
 
-  public StatefulHashMapSerializer(Type valueType) {
+  public MapSerializer(Type valueType) {
     this.valueType = valueType;
     if (valueType != Type.FIXED) {
       valueSchema = Schema.create(valueType);
@@ -108,7 +103,7 @@ public class StatefulHashMapSerializer<T> extends AbstractSerializer<StatefulHas
     valueSerializer = GoraSerializerTypeInferer.getSerializer(valueType);
   }
 
-  public StatefulHashMapSerializer(Class<T> clazz) {
+  public MapSerializer(Class<T> clazz) {
     this.clazz = clazz;
     valueType = TypeUtils.getType(clazz);
     size = TypeUtils.getFixedSize(clazz);
@@ -122,7 +117,7 @@ public class StatefulHashMapSerializer<T> extends AbstractSerializer<StatefulHas
   }
 
   @Override
-  public ByteBuffer toByteBuffer(StatefulHashMap<Utf8, T> map) {
+  public ByteBuffer toByteBuffer(Map<CharSequence, T> map) {
     if (map == null) {
       return null;
     }
@@ -133,13 +128,13 @@ public class StatefulHashMapSerializer<T> extends AbstractSerializer<StatefulHas
     }
   }
 
-  private ByteBuffer toByteBufferWithFixedLengthElements(StatefulHashMap<Utf8, T> map) {
+  private ByteBuffer toByteBufferWithFixedLengthElements(Map<CharSequence, T> map) {
     int n = (int) map.size();
     List<byte[]> list = new ArrayList<byte[]>(n);
     n *= 4;
-    for (Utf8 key : map.keySet()) {
+    for (CharSequence key : map.keySet()) {
       T value = map.get(key);
-      byte[] bytes = BytesArraySerializer.get().fromByteBuffer(Utf8Serializer.get().toByteBuffer(key));
+      byte[] bytes = BytesArraySerializer.get().fromByteBuffer(CharSequenceSerializer.get().toByteBuffer(key));
       list.add(bytes);
       n += bytes.length;
       bytes = BytesArraySerializer.get().fromByteBuffer(valueSerializer.toByteBuffer(value));
@@ -159,13 +154,13 @@ public class StatefulHashMapSerializer<T> extends AbstractSerializer<StatefulHas
     return byteBuffer;
   }
 
-  private ByteBuffer toByteBufferWithVariableLengthElements(StatefulHashMap<Utf8, T> map) {
+  private ByteBuffer toByteBufferWithVariableLengthElements(Map<CharSequence, T> map) {
     int n = (int) map.size();
     List<byte[]> list = new ArrayList<byte[]>(n);
     n *= 8;
-    for (Utf8 key : map.keySet()) {
+    for (CharSequence key : map.keySet()) {
       T value = map.get(key);
-      byte[] bytes = BytesArraySerializer.get().fromByteBuffer(Utf8Serializer.get().toByteBuffer(key));
+      byte[] bytes = BytesArraySerializer.get().fromByteBuffer(CharSequenceSerializer.get().toByteBuffer(key));
       list.add(bytes);
       n += bytes.length;
       bytes = BytesArraySerializer.get().fromByteBuffer(valueSerializer.toByteBuffer(value));
@@ -182,20 +177,20 @@ public class StatefulHashMapSerializer<T> extends AbstractSerializer<StatefulHas
   }
 
   @Override
-  public StatefulHashMap<Utf8, T> fromByteBuffer(ByteBuffer byteBuffer) {
+  public Map<CharSequence, T> fromByteBuffer(ByteBuffer byteBuffer) {
     if (byteBuffer == null) {
       return null;
     }
-    StatefulHashMap<Utf8, T> map = new StatefulHashMap<Utf8, T>();
+    Map<CharSequence, T> map = new HashMap<CharSequence, T>();
 int i = 0;
     while (true) {
-      Utf8 key = null;
+      CharSequence key = null;
       T value = null;
       try {
         int n = IntegerSerializer.get().fromByteBuffer(byteBuffer);
         byte[] bytes = new byte[n];
         byteBuffer.get(bytes, 0, n);
-        key = Utf8Serializer.get().fromByteBuffer( BytesArraySerializer.get().toByteBuffer(bytes) );
+        key = CharSequenceSerializer.get().fromByteBuffer( BytesArraySerializer.get().toByteBuffer(bytes) );
 
         if (size > 0) {
           value = valueSerializer.fromByteBuffer(byteBuffer);

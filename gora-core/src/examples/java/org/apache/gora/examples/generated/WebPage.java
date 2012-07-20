@@ -8,12 +8,12 @@ package org.apache.gora.examples.generated;
 public class WebPage extends org.apache.gora.persistency.impl.PersistentBase implements org.apache.avro.specific.SpecificRecord, org.apache.gora.persistency.Persistent {
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"WebPage\",\"namespace\":\"org.apache.gora.examples.generated\",\"fields\":[{\"name\":\"__g__dirty\",\"type\":\"bytes\",\"doc\":\"Bytes used to represent weather or not a field is dirty.\",\"default\":\"AA==\"},{\"name\":\"url\",\"type\":\"string\"},{\"name\":\"content\",\"type\":[\"bytes\",\"null\"]},{\"name\":\"parsedContent\",\"type\":[{\"type\":\"array\",\"items\":\"string\"},\"null\"]},{\"name\":\"outlinks\",\"type\":[{\"type\":\"map\",\"values\":\"string\"},\"null\"]},{\"name\":\"metadata\",\"type\":[{\"type\":\"record\",\"name\":\"Metadata\",\"fields\":[{\"name\":\"__g__dirty\",\"type\":\"bytes\",\"doc\":\"Bytes used to represent weather or not a field is dirty.\",\"default\":\"AA==\"},{\"name\":\"version\",\"type\":\"int\"},{\"name\":\"data\",\"type\":{\"type\":\"map\",\"values\":\"string\"}}]},\"null\"]}]}");
   /** Bytes used to represent weather or not a field is dirty. */
-  @Deprecated public java.nio.ByteBuffer __g__dirty = java.nio.ByteBuffer.wrap(new byte[1]);
-  @Deprecated public java.lang.CharSequence url;
-  @Deprecated public java.nio.ByteBuffer content;
-  @Deprecated public java.util.List<java.lang.CharSequence> parsedContent;
-  @Deprecated public java.util.Map<java.lang.CharSequence,java.lang.CharSequence> outlinks;
-  @Deprecated public org.apache.gora.examples.generated.Metadata metadata;
+  private java.nio.ByteBuffer __g__dirty = java.nio.ByteBuffer.wrap(new byte[1]);
+  private java.lang.CharSequence url;
+  private java.nio.ByteBuffer content;
+  private java.util.List<java.lang.CharSequence> parsedContent;
+  private java.util.Map<java.lang.CharSequence,java.lang.CharSequence> outlinks;
+  private org.apache.gora.examples.generated.Metadata metadata;
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
   // Used by DatumWriter.  Applications should not call. 
   public java.lang.Object get(int field$) {
@@ -45,7 +45,7 @@ public class WebPage extends org.apache.gora.persistency.impl.PersistentBase imp
    * Gets the value of the 'url' field.
    */
   public java.lang.CharSequence getUrl() {
-    return url;
+    return url.toString();
   }
 
   /**
@@ -53,7 +53,7 @@ public class WebPage extends org.apache.gora.persistency.impl.PersistentBase imp
    * @param value the value to set.
    */
   public void setUrl(java.lang.CharSequence value) {
-    this.url = value;
+    this.url = value.toString();
     setDirty(1);
   }
   
@@ -174,6 +174,29 @@ public class WebPage extends org.apache.gora.persistency.impl.PersistentBase imp
   /** Creates a new WebPage RecordBuilder by copying an existing WebPage instance */
   public static org.apache.gora.examples.generated.WebPage.Builder newBuilder(org.apache.gora.examples.generated.WebPage other) {
     return new org.apache.gora.examples.generated.WebPage.Builder(other);
+  }
+  
+  private static java.nio.ByteBuffer deepCopyToWriteOnlyBuffer(
+      java.nio.ByteBuffer input) {
+    java.nio.ByteBuffer copy = java.nio.ByteBuffer.allocate(input.capacity());
+    int position = input.position();
+    input.reset();
+    int mark = input.position();
+    int limit = input.limit();
+    input.rewind();
+    input.limit(input.capacity());
+    copy.put(input);
+    input.rewind();
+    copy.rewind();
+    input.position(mark);
+    input.mark();
+    copy.position(mark);
+    copy.mark();
+    input.position(position);
+    copy.position(position);
+    input.limit(limit);
+    copy.limit(limit);
+    return copy.asReadOnlyBuffer();
   }
   
   /**
@@ -369,4 +392,133 @@ public class WebPage extends org.apache.gora.persistency.impl.PersistentBase imp
       }
     }
   }
+  
+  public WebPage.Tombstone getTombstone(){
+  	return TOMBSTONE;
+  }
+
+  private static final Tombstone TOMBSTONE = new Tombstone();
+  
+  public static final class Tombstone extends WebPage implements org.apache.gora.persistency.Tombstone {
+  
+      private Tombstone() { }
+  
+	  				  /**
+	   * Gets the value of the 'url' field.
+		   */
+	  public java.lang.CharSequence getUrl() {
+	    throw new java.lang.UnsupportedOperationException("Get is not supported on tombstones");
+	  }
+	
+	  /**
+	   * Sets the value of the 'url' field.
+		   * @param value the value to set.
+	   */
+	  public void setUrl(java.lang.CharSequence value) {
+	    throw new java.lang.UnsupportedOperationException("Set is not supported on tombstones");
+	  }
+	  
+	  /**
+	   * Checks the dirty status of the 'url' field. A field is dirty if it represents a change that has not yet been written to the database.
+		   * @param value the value to set.
+	   */
+	  public boolean isUrlDirty(java.lang.CharSequence value) {
+	    throw new java.lang.UnsupportedOperationException("IsDirty is not supported on tombstones");
+	  }
+	
+				  /**
+	   * Gets the value of the 'content' field.
+		   */
+	  public java.nio.ByteBuffer getContent() {
+	    throw new java.lang.UnsupportedOperationException("Get is not supported on tombstones");
+	  }
+	
+	  /**
+	   * Sets the value of the 'content' field.
+		   * @param value the value to set.
+	   */
+	  public void setContent(java.nio.ByteBuffer value) {
+	    throw new java.lang.UnsupportedOperationException("Set is not supported on tombstones");
+	  }
+	  
+	  /**
+	   * Checks the dirty status of the 'content' field. A field is dirty if it represents a change that has not yet been written to the database.
+		   * @param value the value to set.
+	   */
+	  public boolean isContentDirty(java.nio.ByteBuffer value) {
+	    throw new java.lang.UnsupportedOperationException("IsDirty is not supported on tombstones");
+	  }
+	
+				  /**
+	   * Gets the value of the 'parsedContent' field.
+		   */
+	  public java.util.List<java.lang.CharSequence> getParsedContent() {
+	    throw new java.lang.UnsupportedOperationException("Get is not supported on tombstones");
+	  }
+	
+	  /**
+	   * Sets the value of the 'parsedContent' field.
+		   * @param value the value to set.
+	   */
+	  public void setParsedContent(java.util.List<java.lang.CharSequence> value) {
+	    throw new java.lang.UnsupportedOperationException("Set is not supported on tombstones");
+	  }
+	  
+	  /**
+	   * Checks the dirty status of the 'parsedContent' field. A field is dirty if it represents a change that has not yet been written to the database.
+		   * @param value the value to set.
+	   */
+	  public boolean isParsedContentDirty(java.util.List<java.lang.CharSequence> value) {
+	    throw new java.lang.UnsupportedOperationException("IsDirty is not supported on tombstones");
+	  }
+	
+				  /**
+	   * Gets the value of the 'outlinks' field.
+		   */
+	  public java.util.Map<java.lang.CharSequence,java.lang.CharSequence> getOutlinks() {
+	    throw new java.lang.UnsupportedOperationException("Get is not supported on tombstones");
+	  }
+	
+	  /**
+	   * Sets the value of the 'outlinks' field.
+		   * @param value the value to set.
+	   */
+	  public void setOutlinks(java.util.Map<java.lang.CharSequence,java.lang.CharSequence> value) {
+	    throw new java.lang.UnsupportedOperationException("Set is not supported on tombstones");
+	  }
+	  
+	  /**
+	   * Checks the dirty status of the 'outlinks' field. A field is dirty if it represents a change that has not yet been written to the database.
+		   * @param value the value to set.
+	   */
+	  public boolean isOutlinksDirty(java.util.Map<java.lang.CharSequence,java.lang.CharSequence> value) {
+	    throw new java.lang.UnsupportedOperationException("IsDirty is not supported on tombstones");
+	  }
+	
+				  /**
+	   * Gets the value of the 'metadata' field.
+		   */
+	  public org.apache.gora.examples.generated.Metadata getMetadata() {
+	    throw new java.lang.UnsupportedOperationException("Get is not supported on tombstones");
+	  }
+	
+	  /**
+	   * Sets the value of the 'metadata' field.
+		   * @param value the value to set.
+	   */
+	  public void setMetadata(org.apache.gora.examples.generated.Metadata value) {
+	    throw new java.lang.UnsupportedOperationException("Set is not supported on tombstones");
+	  }
+	  
+	  /**
+	   * Checks the dirty status of the 'metadata' field. A field is dirty if it represents a change that has not yet been written to the database.
+		   * @param value the value to set.
+	   */
+	  public boolean isMetadataDirty(org.apache.gora.examples.generated.Metadata value) {
+	    throw new java.lang.UnsupportedOperationException("IsDirty is not supported on tombstones");
+	  }
+	
+		  
+  }
+  
 }

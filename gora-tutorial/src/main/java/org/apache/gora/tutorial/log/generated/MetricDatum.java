@@ -8,10 +8,10 @@ package org.apache.gora.tutorial.log.generated;
 public class MetricDatum extends org.apache.gora.persistency.impl.PersistentBase implements org.apache.avro.specific.SpecificRecord, org.apache.gora.persistency.Persistent {
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"MetricDatum\",\"namespace\":\"org.apache.gora.tutorial.log.generated\",\"fields\":[{\"name\":\"__g__dirty\",\"type\":\"bytes\",\"doc\":\"Bytes used to represent weather or not a field is dirty.\",\"default\":\"AA==\"},{\"name\":\"metricDimension\",\"type\":\"string\"},{\"name\":\"timestamp\",\"type\":\"long\"},{\"name\":\"metric\",\"type\":\"long\"}]}");
   /** Bytes used to represent weather or not a field is dirty. */
-  @Deprecated public java.nio.ByteBuffer __g__dirty = java.nio.ByteBuffer.wrap(new byte[1]);
-  @Deprecated public java.lang.CharSequence metricDimension;
-  @Deprecated public long timestamp;
-  @Deprecated public long metric;
+  private java.nio.ByteBuffer __g__dirty = java.nio.ByteBuffer.wrap(new byte[1]);
+  private java.lang.CharSequence metricDimension;
+  private long timestamp;
+  private long metric;
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
   // Used by DatumWriter.  Applications should not call. 
   public java.lang.Object get(int field$) {
@@ -251,4 +251,87 @@ public class MetricDatum extends org.apache.gora.persistency.impl.PersistentBase
       }
     }
   }
+  
+  public MetricDatum.Tombstone getTombstone(){
+  	return TOMBSTONE;
+  }
+
+  private static final Tombstone TOMBSTONE = new Tombstone();
+  
+  public static final class Tombstone extends MetricDatum implements org.apache.gora.persistency.Tombstone {
+  
+      private Tombstone() { }
+  
+	  				  /**
+	   * Gets the value of the 'metricDimension' field.
+		   */
+	  public java.lang.CharSequence getMetricDimension() {
+	    throw new java.lang.UnsupportedOperationException("Get is not supported on tombstones");
+	  }
+	
+	  /**
+	   * Sets the value of the 'metricDimension' field.
+		   * @param value the value to set.
+	   */
+	  public void setMetricDimension(java.lang.CharSequence value) {
+	    throw new java.lang.UnsupportedOperationException("Set is not supported on tombstones");
+	  }
+	  
+	  /**
+	   * Checks the dirty status of the 'metricDimension' field. A field is dirty if it represents a change that has not yet been written to the database.
+		   * @param value the value to set.
+	   */
+	  public boolean isMetricDimensionDirty(java.lang.CharSequence value) {
+	    throw new java.lang.UnsupportedOperationException("IsDirty is not supported on tombstones");
+	  }
+	
+				  /**
+	   * Gets the value of the 'timestamp' field.
+		   */
+	  public java.lang.Long getTimestamp() {
+	    throw new java.lang.UnsupportedOperationException("Get is not supported on tombstones");
+	  }
+	
+	  /**
+	   * Sets the value of the 'timestamp' field.
+		   * @param value the value to set.
+	   */
+	  public void setTimestamp(java.lang.Long value) {
+	    throw new java.lang.UnsupportedOperationException("Set is not supported on tombstones");
+	  }
+	  
+	  /**
+	   * Checks the dirty status of the 'timestamp' field. A field is dirty if it represents a change that has not yet been written to the database.
+		   * @param value the value to set.
+	   */
+	  public boolean isTimestampDirty(java.lang.Long value) {
+	    throw new java.lang.UnsupportedOperationException("IsDirty is not supported on tombstones");
+	  }
+	
+				  /**
+	   * Gets the value of the 'metric' field.
+		   */
+	  public java.lang.Long getMetric() {
+	    throw new java.lang.UnsupportedOperationException("Get is not supported on tombstones");
+	  }
+	
+	  /**
+	   * Sets the value of the 'metric' field.
+		   * @param value the value to set.
+	   */
+	  public void setMetric(java.lang.Long value) {
+	    throw new java.lang.UnsupportedOperationException("Set is not supported on tombstones");
+	  }
+	  
+	  /**
+	   * Checks the dirty status of the 'metric' field. A field is dirty if it represents a change that has not yet been written to the database.
+		   * @param value the value to set.
+	   */
+	  public boolean isMetricDirty(java.lang.Long value) {
+	    throw new java.lang.UnsupportedOperationException("IsDirty is not supported on tombstones");
+	  }
+	
+		  
+  }
+  
 }

@@ -26,6 +26,7 @@ import org.apache.avro.specific.SpecificRecord;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.gora.persistency.Dirtyable;
 import org.apache.gora.persistency.Persistent;
+import org.apache.gora.persistency.Tombstone;
 
 /**
  * Base classs implementing common functionality for Persistent classes.
@@ -101,9 +102,9 @@ public abstract class PersistentBase extends SpecificRecordBase implements
     assert (dirtyBytes.position() == 0);
     boolean dirty = false;
     for (int i = 0; i < dirtyBytes.limit(); i++) {
-      dirty |= dirtyBytes.get(i) != 0;
+      dirty = dirty || dirtyBytes.get(i) != 0;
     }
-    return isSubRecordDirty | dirty;
+    return isSubRecordDirty || dirty;
   }
 
   private boolean checkIfMutableFieldAndDirty(Field field) {
@@ -114,13 +115,6 @@ public abstract class PersistentBase extends SpecificRecordBase implements
     case MAP:
     case ARRAY:
       return ((Dirtyable) get(field.pos())).isDirty();
-    case STRING:
-      // TODO: no good way to check Utf8's for dirtyness. Perhaps aspectj? Or
-      // replace with Custom gora extension?
-      return true;
-    case BYTES:
-      // TODO: no good way to check ByteBuffers for dirtyness. Perhaps aspectj?
-      return true;
     case UNION:
       Object value = get(field.pos());
       if (value instanceof Dirtyable) {
@@ -214,4 +208,10 @@ public abstract class PersistentBase extends SpecificRecordBase implements
       return false;
     }
   }
+  
+  public List<Field> getUnmanagedFields(){
+    List<Field> fields = getSchema().getFields();
+    return fields.subList(1, fields.size());
+  }
+  
 }

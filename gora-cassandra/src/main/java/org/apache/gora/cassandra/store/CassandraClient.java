@@ -51,12 +51,11 @@ import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericArray;
 import org.apache.avro.util.Utf8;
 import org.apache.gora.cassandra.query.CassandraQuery;
-import org.apache.gora.cassandra.serializers.GenericArraySerializer;
+import org.apache.gora.cassandra.serializers.ListSerializer;
 import org.apache.gora.cassandra.serializers.GoraSerializerTypeInferer;
 import org.apache.gora.cassandra.serializers.TypeUtils;
 import org.apache.gora.mapreduce.GoraRecordReader;
 import org.apache.gora.persistency.Persistent;
-import org.apache.gora.persistency.StatefulHashMap;
 import org.apache.gora.query.Query;
 import org.apache.gora.util.ByteUtils;
 import org.slf4j.Logger;
@@ -198,11 +197,11 @@ public class CassandraClient<K, T extends Persistent> {
 
         // TODO: hack, do not store empty arrays
         if (itemValue instanceof GenericArray<?>) {
-          if (((GenericArray)itemValue).size() == 0) {
+          if (((List)itemValue).size() == 0) {
             continue;
           }
-        } else if (itemValue instanceof StatefulHashMap<?,?>) {
-          if (((StatefulHashMap)itemValue).size() == 0) {
+        } else if (itemValue instanceof Map<?,?>) {
+          if (((Map)itemValue).size() == 0) {
             continue;
           }
         }
@@ -216,19 +215,19 @@ public class CassandraClient<K, T extends Persistent> {
   }
 
   @SuppressWarnings("unchecked")
-  public void addStatefulHashMap(K key, String fieldName, StatefulHashMap<Utf8,Object> map) {
+  public void addStatefulHashMap(K key, String fieldName, Map<CharSequence,Object> map) {
     if (isSuper( cassandraMapping.getFamily(fieldName) )) {
       int i= 0;
-      for (Utf8 mapKey: map.keySet()) {
+      for (CharSequence mapKey: map.keySet()) {
 
         // TODO: hack, do not store empty arrays
         Object mapValue = map.get(mapKey);
         if (mapValue instanceof GenericArray<?>) {
-          if (((GenericArray)mapValue).size() == 0) {
+          if (((List)mapValue).size() == 0) {
             continue;
           }
-        } else if (mapValue instanceof StatefulHashMap<?,?>) {
-          if (((StatefulHashMap)mapValue).size() == 0) {
+        } else if (mapValue instanceof Map<?,?>) {
+          if (((Map)mapValue).size() == 0) {
             continue;
           }
         }

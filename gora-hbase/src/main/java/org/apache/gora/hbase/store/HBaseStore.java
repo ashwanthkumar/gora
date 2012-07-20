@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -38,18 +37,14 @@ import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericArray;
 import org.apache.avro.util.Utf8;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.gora.hbase.query.HBaseGetResult;
 import org.apache.gora.hbase.query.HBaseQuery;
 import org.apache.gora.hbase.query.HBaseScannerResult;
 import org.apache.gora.hbase.store.HBaseMapping.HBaseMappingBuilder;
 import org.apache.gora.hbase.util.HBaseByteInterface;
-import org.apache.gora.persistency.ListGenericArray;
 import org.apache.gora.persistency.Persistent;
-import org.apache.gora.persistency.State;
-import org.apache.gora.persistency.StatefulHashMap;
-import org.apache.gora.persistency.StatefulMap;
+import org.apache.gora.persistency.Tombstones;
+import org.apache.gora.persistency.impl.DirtyMapWrapper.DirtyEntryWrapper;
 import org.apache.gora.query.PartitionQuery;
 import org.apache.gora.query.Query;
 import org.apache.gora.query.impl.PartitionQueryImpl;
@@ -72,6 +67,8 @@ import org.apache.hadoop.hbase.util.Pair;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.input.SAXBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * DataStore for HBase. Thread safe.
@@ -191,22 +188,23 @@ implements Configurable {
       HBaseColumn hcol = mapping.getColumn(field.name());
       switch(type) {
         case MAP:
-          if(o instanceof StatefulMap) {
-            StatefulHashMap<Utf8, ?> map = (StatefulHashMap<Utf8, ?>) o;
-            for (Entry<Utf8, State> e : map.states().entrySet()) {
-              Utf8 mapKey = e.getKey();
-              switch (e.getValue()) {
-                case DIRTY:
+          if(o instanceof Map) {
+            Map<CharSequence, ?> map = (Map<CharSequence, ?>) o;
+            
+            for (Entry<CharSequence, ?> e : map.entrySet()) {
+              DirtyEntryWrapper<K, ?> wrapper = (DirtyEntryWrapper<K, ?>)e;
+              CharSequence mapKey = e.getKey();
+              Object value = e.getValue();
+              if(Tombstones.isTombstone(value)){
+                byte[] qual = Bytes.toBytes(mapKey.toString());
+                hasDeletes = true;
+                delete.deleteColumn(hcol.getFamily(), qual);
+                break;
+              } else if(wrapper.isDirty()){
                   byte[] qual = Bytes.toBytes(mapKey.toString());
                   byte[] val = toBytes(map.get(mapKey), field.schema().getValueType());
                   put.add(hcol.getFamily(), qual, val);
                   hasPuts = true;
-                  break;
-                case DELETED:
-                  qual = Bytes.toBytes(mapKey.toString());
-                  hasDeletes = true;
-                  delete.deleteColumn(hcol.getFamily(), qual);
-                  break;
               }
             }
           } else {
@@ -480,8 +478,7 @@ implements Configurable {
           for (Entry<byte[], byte[]> e : qualMap.entrySet()) {
             arrayList.add(fromBytes(valueSchema, e.getValue()));
           }
-          ListGenericArray arr = new ListGenericArray(fieldSchema, arrayList);
-          setField(persistent, field, arr);
+          setField(persistent, field, arrayList);
           break;
         default:
           byte[] val =
@@ -499,7 +496,7 @@ implements Configurable {
 
   @SuppressWarnings({ "unchecked", "rawtypes" })
   private void setField(T persistent, Field field, Map map) {
-    persistent.put(field.pos(), new StatefulHashMap(map));
+    persistent.put(field.pos(), map);
   }
 
   private void setField(T persistent, Field field, byte[] val)
@@ -508,7 +505,7 @@ implements Configurable {
   }
 
   @SuppressWarnings("rawtypes")
-  private void setField(T persistent, Field field, GenericArray list) {
+  private void setField(T persistent, Field field, List list) {
     persistent.put(field.pos(), list);
   }
 

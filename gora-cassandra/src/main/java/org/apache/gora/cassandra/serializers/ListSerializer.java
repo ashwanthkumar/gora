@@ -30,50 +30,45 @@ import me.prettyprint.cassandra.serializers.BytesArraySerializer;
 import me.prettyprint.cassandra.serializers.IntegerSerializer;
 import me.prettyprint.hector.api.Serializer;
 import me.prettyprint.hector.api.ddl.ComparatorType;
-import static me.prettyprint.hector.api.ddl.ComparatorType.UTF8TYPE;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericArray;
-import org.apache.avro.specific.SpecificFixed;
-import org.apache.avro.util.Utf8;
-import org.apache.gora.persistency.ListGenericArray;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * A GenericArraySerializer translates the byte[] to and from GenericArray of Avro.
  */
-public class GenericArraySerializer<T> extends AbstractSerializer<GenericArray<T>> {
+public class ListSerializer<T> extends AbstractSerializer<List<T>> {
 
-  public static final Logger LOG = LoggerFactory.getLogger(GenericArraySerializer.class);
+  public static final Logger LOG = LoggerFactory.getLogger(ListSerializer.class);
 
-  private static Map<Type, GenericArraySerializer> elementTypeToSerializerMap = new HashMap<Type, GenericArraySerializer>();
-  private static Map<Class, GenericArraySerializer> fixedClassToSerializerMap = new HashMap<Class, GenericArraySerializer>();
+  private static Map<Type, ListSerializer> elementTypeToSerializerMap = new HashMap<Type, ListSerializer>();
+  private static Map<Class, ListSerializer> fixedClassToSerializerMap = new HashMap<Class, ListSerializer>();
 
-  public static GenericArraySerializer get(Type elementType) {
-    GenericArraySerializer serializer = elementTypeToSerializerMap.get(elementType);
+  public static ListSerializer get(Type elementType) {
+    ListSerializer serializer = elementTypeToSerializerMap.get(elementType);
     if (serializer == null) {
-      serializer = new GenericArraySerializer(elementType);
+      serializer = new ListSerializer(elementType);
       elementTypeToSerializerMap.put(elementType, serializer);
     }
     return serializer;
   }
 
-  public static GenericArraySerializer get(Type elementType, Class clazz) {
+  public static ListSerializer get(Type elementType, Class clazz) {
     if (elementType != Type.FIXED) {
       return null;
     }
-    GenericArraySerializer serializer = elementTypeToSerializerMap.get(clazz);
+    ListSerializer serializer = elementTypeToSerializerMap.get(clazz);
     if (serializer == null) {
-      serializer = new GenericArraySerializer(clazz);
+      serializer = new ListSerializer(clazz);
       fixedClassToSerializerMap.put(clazz, serializer);
     }
     return serializer;
   }
 
-  public static GenericArraySerializer get(Schema elementSchema) {
+  public static ListSerializer get(Schema elementSchema) {
     Type type = elementSchema.getType();
     if (type == Type.FIXED) {
       return get(Type.FIXED, TypeUtils.getClass(elementSchema));
@@ -88,18 +83,18 @@ public class GenericArraySerializer<T> extends AbstractSerializer<GenericArray<T
   private Class<T> clazz = null;
   private Serializer<T> elementSerializer = null;
 
-  public GenericArraySerializer(Serializer<T> elementSerializer) {
+  public ListSerializer(Serializer<T> elementSerializer) {
     this.elementSerializer = elementSerializer;
   }
 
-  public GenericArraySerializer(Schema elementSchema) {
+  public ListSerializer(Schema elementSchema) {
     this.elementSchema = elementSchema;
     elementType = elementSchema.getType();
     size = TypeUtils.getFixedSize(elementSchema);
     elementSerializer = GoraSerializerTypeInferer.getSerializer(elementSchema);
   }
 
-  public GenericArraySerializer(Type elementType) {
+  public ListSerializer(Type elementType) {
     this.elementType = elementType;
     if (elementType != Type.FIXED) {
       elementSchema = Schema.create(elementType);
@@ -109,7 +104,7 @@ public class GenericArraySerializer<T> extends AbstractSerializer<GenericArray<T
     elementSerializer = GoraSerializerTypeInferer.getSerializer(elementType);
   }
 
-  public GenericArraySerializer(Class<T> clazz) {
+  public ListSerializer(Class<T> clazz) {
     this.clazz = clazz;
     elementType = TypeUtils.getType(clazz);
     size = TypeUtils.getFixedSize(clazz);
@@ -123,7 +118,7 @@ public class GenericArraySerializer<T> extends AbstractSerializer<GenericArray<T
   }
 
   @Override
-  public ByteBuffer toByteBuffer(GenericArray<T> array) {
+  public ByteBuffer toByteBuffer(List<T> array) {
     if (array == null) {
       return null;
     }
@@ -134,7 +129,7 @@ public class GenericArraySerializer<T> extends AbstractSerializer<GenericArray<T
     }
   }
 
-  private ByteBuffer toByteBufferWithFixedLengthElements(GenericArray<T> array) {
+  private ByteBuffer toByteBufferWithFixedLengthElements(List<T> array) {
     ByteBuffer byteBuffer = ByteBuffer.allocate((int) array.size() * size);
     for (T element : array) {
       byteBuffer.put(elementSerializer.toByteBuffer(element));
@@ -143,7 +138,7 @@ public class GenericArraySerializer<T> extends AbstractSerializer<GenericArray<T
     return byteBuffer;
   }
 
-  private ByteBuffer toByteBufferWithVariableLengthElements(GenericArray<T> array) {
+  private ByteBuffer toByteBufferWithVariableLengthElements(List<T> array) {
     int n = (int) array.size();
     List<byte[]> list = new ArrayList<byte[]>(n);
     n *= 4;
@@ -162,11 +157,11 @@ public class GenericArraySerializer<T> extends AbstractSerializer<GenericArray<T
   }
 
   @Override
-  public GenericArray<T> fromByteBuffer(ByteBuffer byteBuffer) {
+  public List<T> fromByteBuffer(ByteBuffer byteBuffer) {
     if (byteBuffer == null) {
       return null;
     }
-    GenericArray<T> array = new ListGenericArray<T>(elementSchema);
+    ArrayList<T> array = new ArrayList<T>();
 int i = 0;
     while (true) {
       T element = null;

@@ -50,9 +50,7 @@ import org.apache.gora.cassandra.query.CassandraResultSet;
 import org.apache.gora.cassandra.query.CassandraRow;
 import org.apache.gora.cassandra.query.CassandraSubColumn;
 import org.apache.gora.cassandra.query.CassandraSuperColumn;
-import org.apache.gora.persistency.ListGenericArray;
 import org.apache.gora.persistency.Persistent;
-import org.apache.gora.persistency.StatefulHashMap;
 import org.apache.gora.persistency.impl.PersistentBase;
 import org.apache.gora.query.PartitionQuery;
 import org.apache.gora.query.Query;
@@ -295,18 +293,11 @@ public class CassandraStore<K, T extends Persistent> extends DataStoreBase<K, T>
             fieldValue = newRecord;
             break;
           case MAP:
-            StatefulHashMap<?, ?> map = (StatefulHashMap<?, ?>) fieldValue;
-            StatefulHashMap<?, ?> newMap = new StatefulHashMap(map);
-            fieldValue = newMap;
+            Map<?, ?> map = (Map<?, ?>) fieldValue;
+            fieldValue = map;
             break;
           case ARRAY:
-            GenericArray array = (GenericArray) fieldValue;
-            ListGenericArray newArray = new ListGenericArray(fieldSchema.getElementType());
-            Iterator iter = array.iterator();
-            while (iter.hasNext()) {
-              newArray.add(iter.next());
-            }
-            fieldValue = newArray;
+            fieldValue = (List) fieldValue;
             break;
         }
         
@@ -346,12 +337,12 @@ public class CassandraStore<K, T extends Persistent> extends DataStoreBase<K, T>
               
               // TODO: hack, do not store empty arrays
               Object memberValue = persistentBase.get(member.pos());
-              if (memberValue instanceof GenericArray<?>) {
-                if (((GenericArray)memberValue).size() == 0) {
+              if (memberValue instanceof List<?>) {
+                if (((List)memberValue).size() == 0) {
                   continue;
                 }
-              } else if (memberValue instanceof StatefulHashMap<?,?>) {
-                if (((StatefulHashMap)memberValue).size() == 0) {
+              } else if (memberValue instanceof Map<?,?>) {
+                if (((Map)memberValue).size() == 0) {
                   continue;
                 }
               }
@@ -366,8 +357,8 @@ public class CassandraStore<K, T extends Persistent> extends DataStoreBase<K, T>
         break;
       case MAP:
         if (value != null) {
-          if (value instanceof StatefulHashMap<?, ?>) {
-            this.cassandraClient.addStatefulHashMap(key, field.name(), (StatefulHashMap<Utf8,Object>)value);
+          if (value instanceof Map<?, ?>) {
+            this.cassandraClient.addStatefulHashMap(key, field.name(), (Map<CharSequence,Object>)value);
           } else {
             LOG.info("Map not supported: " + value.toString());
           }

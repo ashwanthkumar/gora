@@ -546,6 +546,8 @@
     </profiles>
 
     <modules>
+        <module>gora-compiler</module>
+        <module>gora-compiler-cli</module>
         <module>gora-core</module>
         <module>gora-hbase</module>
         <module>gora-accumulo</module>
@@ -553,8 +555,6 @@
         <module>gora-sql</module>
         <module>gora-tutorial</module>
         <module>sources-dist</module>
-        <module>gora-compiler</module>
-        <module>gora-compiler-cli</module>
     </modules>
 
     <properties>

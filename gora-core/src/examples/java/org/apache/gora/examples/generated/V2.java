@@ -8,8 +8,8 @@ package org.apache.gora.examples.generated;
 public class V2 extends org.apache.gora.persistency.impl.PersistentBase implements org.apache.avro.specific.SpecificRecord, org.apache.gora.persistency.Persistent {
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"V2\",\"namespace\":\"org.apache.gora.examples.generated\",\"fields\":[{\"name\":\"__g__dirty\",\"type\":\"bytes\",\"doc\":\"Bytes used to represent weather or not a field is dirty.\",\"default\":\"AA==\"},{\"name\":\"v3\",\"type\":\"int\"}]}");
   /** Bytes used to represent weather or not a field is dirty. */
-  @Deprecated public java.nio.ByteBuffer __g__dirty = java.nio.ByteBuffer.wrap(new byte[1]);
-  @Deprecated public int v3;
+  private java.nio.ByteBuffer __g__dirty = java.nio.ByteBuffer.wrap(new byte[1]);
+  private int v3;
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
   // Used by DatumWriter.  Applications should not call. 
   public java.lang.Object get(int field$) {
@@ -66,6 +66,29 @@ public class V2 extends org.apache.gora.persistency.impl.PersistentBase implemen
   /** Creates a new V2 RecordBuilder by copying an existing V2 instance */
   public static org.apache.gora.examples.generated.V2.Builder newBuilder(org.apache.gora.examples.generated.V2 other) {
     return new org.apache.gora.examples.generated.V2.Builder(other);
+  }
+  
+  private static java.nio.ByteBuffer deepCopyToWriteOnlyBuffer(
+      java.nio.ByteBuffer input) {
+    java.nio.ByteBuffer copy = java.nio.ByteBuffer.allocate(input.capacity());
+    int position = input.position();
+    input.reset();
+    int mark = input.position();
+    int limit = input.limit();
+    input.rewind();
+    input.limit(input.capacity());
+    copy.put(input);
+    input.rewind();
+    copy.rewind();
+    input.position(mark);
+    input.mark();
+    copy.position(mark);
+    copy.mark();
+    input.position(position);
+    copy.position(position);
+    input.limit(limit);
+    copy.limit(limit);
+    return copy.asReadOnlyBuffer();
   }
   
   /**
@@ -136,4 +159,41 @@ public class V2 extends org.apache.gora.persistency.impl.PersistentBase implemen
       }
     }
   }
+  
+  public V2.Tombstone getTombstone(){
+  	return TOMBSTONE;
+  }
+
+  private static final Tombstone TOMBSTONE = new Tombstone();
+  
+  public static final class Tombstone extends V2 implements org.apache.gora.persistency.Tombstone {
+  
+      private Tombstone() { }
+  
+	  				  /**
+	   * Gets the value of the 'v3' field.
+		   */
+	  public java.lang.Integer getV3() {
+	    throw new java.lang.UnsupportedOperationException("Get is not supported on tombstones");
+	  }
+	
+	  /**
+	   * Sets the value of the 'v3' field.
+		   * @param value the value to set.
+	   */
+	  public void setV3(java.lang.Integer value) {
+	    throw new java.lang.UnsupportedOperationException("Set is not supported on tombstones");
+	  }
+	  
+	  /**
+	   * Checks the dirty status of the 'v3' field. A field is dirty if it represents a change that has not yet been written to the database.
+		   * @param value the value to set.
+	   */
+	  public boolean isV3Dirty(java.lang.Integer value) {
+	    throw new java.lang.UnsupportedOperationException("IsDirty is not supported on tombstones");
+	  }
+	
+		  
+  }
+  
 }

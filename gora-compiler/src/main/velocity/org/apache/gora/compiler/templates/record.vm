@@ -28,7 +28,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 #if ($field.doc())
   /** $field.doc() */
 #end
-  @Deprecated public ${this.javaUnbox($field.schema())} ${this.mangle($field.name(), $schema.isError())}#if(! $this.isNotHiddenField($field.name()) ) = ${this.generateDefaultValueString($schema,$field.name())}#end;
+  private ${this.javaUnbox($field.schema())} ${this.mangle($field.name(), $schema.isError())}#if(! $this.isNotHiddenField($field.name()) ) = ${this.generateDefaultValueString($schema,$field.name())}#end;
 #end
 #if ($schema.isError())
 
@@ -81,7 +81,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 #if ($field.doc())   * $field.doc()#end
    */
   public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
-    return ${this.mangle($field.name(), $schema.isError())};
+    return ${this.mangle($field.name(), $schema.isError())}${this.generateAppropriateImmutabilityModifier($field.schema())};
   }
 
   /**
@@ -118,6 +118,29 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
   /** Creates a new ${this.mangle($schema.getName())} RecordBuilder by copying an existing $this.mangle($schema.getName()) instance */
   public static #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder newBuilder(#if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())} other) {
     return new #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder(other);
+  }
+  
+  private static java.nio.ByteBuffer deepCopyToWriteOnlyBuffer(
+      java.nio.ByteBuffer input) {
+    java.nio.ByteBuffer copy = java.nio.ByteBuffer.allocate(input.capacity());
+    int position = input.position();
+    input.reset();
+    int mark = input.position();
+    int limit = input.limit();
+    input.rewind();
+    input.limit(input.capacity());
+    copy.put(input);
+    input.rewind();
+    copy.rewind();
+    input.position(mark);
+    input.mark();
+    copy.position(mark);
+    copy.mark();
+    input.position(position);
+    copy.position(position);
+    input.limit(limit);
+    copy.limit(limit);
+    return copy.asReadOnlyBuffer();
   }
   
   /**
@@ -223,4 +246,48 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
       }
     }
   }
+  
+  public ${this.mangle($schema.getName())}.Tombstone getTombstone(){
+  	return TOMBSTONE;
+  }
+
+  private static final Tombstone TOMBSTONE = new Tombstone();
+  
+  public static final class Tombstone extends ${this.mangle($schema.getName())} implements org.apache.gora.persistency.Tombstone {
+  
+      private Tombstone() { }
+  
+	  #foreach ($field in $schema.getFields())
+	#if ($this.isNotHiddenField($field.name()))
+	  /**
+	   * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field.
+	#if ($field.doc())   * $field.doc()#end
+	   */
+	  public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
+	    throw new java.lang.UnsupportedOperationException("Get is not supported on tombstones");
+	  }
+	
+	  /**
+	   * Sets the value of the '${this.mangle($field.name(), $schema.isError())}' field.
+	#if ($field.doc())   * $field.doc()#end
+	   * @param value the value to set.
+	   */
+	  public void ${this.generateSetMethod($schema, $field)}(${this.javaType($field.schema())} value) {
+	    throw new java.lang.UnsupportedOperationException("Set is not supported on tombstones");
+	  }
+	  
+	  /**
+	   * Checks the dirty status of the '${this.mangle($field.name(), $schema.isError())}' field. A field is dirty if it represents a change that has not yet been written to the database.
+	#if ($field.doc())   * $field.doc()#end
+	   * @param value the value to set.
+	   */
+	  public boolean ${this.generateDirtyMethod($schema, $field)}(${this.javaType($field.schema())} value) {
+	    throw new java.lang.UnsupportedOperationException("IsDirty is not supported on tombstones");
+	  }
+	
+	#end
+	#end
+  
+  }
+  
 }

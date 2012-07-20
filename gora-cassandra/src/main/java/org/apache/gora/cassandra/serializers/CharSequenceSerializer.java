@@ -18,28 +18,27 @@
 
 package org.apache.gora.cassandra.serializers;
 
+import static me.prettyprint.hector.api.ddl.ComparatorType.UTF8TYPE;
+
 import java.nio.ByteBuffer;
 
 import me.prettyprint.cassandra.serializers.AbstractSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.hector.api.ddl.ComparatorType;
-import static me.prettyprint.hector.api.ddl.ComparatorType.UTF8TYPE;
-
-import org.apache.avro.util.Utf8;
 
 /**
  * A Utf8Serializer translates the byte[] to and from Utf8 object of Avro.
  */
-public final class Utf8Serializer extends AbstractSerializer<Utf8> {
+public final class CharSequenceSerializer extends AbstractSerializer<CharSequence> {
 
-  private static final Utf8Serializer instance = new Utf8Serializer();
+  private static final CharSequenceSerializer instance = new CharSequenceSerializer();
 
-  public static Utf8Serializer get() {
+  public static CharSequenceSerializer get() {
     return instance;
   }
 
   @Override
-  public ByteBuffer toByteBuffer(Utf8 obj) {
+  public ByteBuffer toByteBuffer(CharSequence obj) {
     if (obj == null) {
       return null;
     }
@@ -47,11 +46,11 @@ public final class Utf8Serializer extends AbstractSerializer<Utf8> {
   }
 
   @Override
-  public Utf8 fromByteBuffer(ByteBuffer byteBuffer) {
+  public CharSequence fromByteBuffer(ByteBuffer byteBuffer) {
     if (byteBuffer == null) {
       return null;
     }
-    return new Utf8(StringSerializer.get().fromByteBuffer(byteBuffer));
+    return StringSerializer.get().fromByteBuffer(byteBuffer);
   }
 
   @Override

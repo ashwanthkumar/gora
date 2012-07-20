@@ -3,6 +3,7 @@ package org.apache.gora.compiler;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -45,6 +46,17 @@ public class GoraCompiler extends SpecificCompiler {
 		}
 	}
 
+	public static String generateAppropriateImmutabilityModifier(Schema schema){
+	  switch (schema.getType()) {
+    case STRING:
+      return ".toString()";
+    case BYTES:
+      return ".asReadOnlyBuffer()";
+    default:
+      return "";
+    }
+	}
+	
 	public static String generateAppropriateWrapperOrValue(Schema schema) {
 		switch (schema.getType()) {
 		case MAP:
@@ -53,6 +65,10 @@ public class GoraCompiler extends SpecificCompiler {
 		case ARRAY:
 			return "(value instanceof org.apache.gora.persistency.Dirtyable) ? "
 					+ "value : new org.apache.gora.persistency.impl.DirtyListWrapper(value)";
+		case STRING:
+		  return "value.toString()";
+		case BYTES:
+		  return "deepCopyToReadOnlyBuffer(value)";
 		default:
 			return "value";
 		}
