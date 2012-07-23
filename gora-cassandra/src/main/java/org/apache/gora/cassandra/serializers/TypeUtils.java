@@ -27,7 +27,7 @@ import org.apache.avro.specific.SpecificFixed;
 import org.apache.avro.util.Utf8;
 import org.apache.gora.persistency.ListGenericArray;
 import org.apache.gora.persistency.Persistent;
-import org.apache.gora.persistency.StatefulHashMap;
+import org.apache.gora.persistency.impl.StatefulMapWrapper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,7 +74,7 @@ public class TypeUtils {
       return Type.LONG;
     } else if (clazz.equals(ListGenericArray.class)) {
       return Type.ARRAY;
-    } else if (clazz.equals(StatefulHashMap.class)) {
+    } else if (clazz.equals(StatefulMapWrapper.class)) {
       return Type.MAP;
     } else if (clazz.equals(Persistent.class)) {
       return Type.RECORD;
@@ -103,7 +103,7 @@ public class TypeUtils {
     } else if (type == Type.ARRAY) {
       return ListGenericArray.class;
     } else if (type == Type.MAP) {
-      return StatefulHashMap.class;
+      return StatefulMapWrapper.class;
     } else if (type == Type.RECORD) {
       return Persistent.class;
     } else if (type == Type.FIXED) {

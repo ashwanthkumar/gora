@@ -17,7 +17,7 @@ import org.apache.avro.specific.SpecificFixed;
 import org.apache.gora.persistency.StateManager;
 import org.apache.gora.persistency.impl.PersistentBase;
 import org.apache.gora.persistency.impl.StateManagerImpl;
-import org.apache.gora.persistency.StatefulHashMap;
+import org.apache.gora.persistency.impl.StatefulMapWrapper;
 import org.apache.gora.persistency.ListGenericArray;
 
 @SuppressWarnings("all")

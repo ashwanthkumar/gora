@@ -17,7 +17,7 @@ import org.apache.avro.specific.SpecificFixed;
 import org.apache.gora.persistency.StateManager;
 import org.apache.gora.persistency.impl.PersistentBase;
 import org.apache.gora.persistency.impl.StateManagerImpl;
-import org.apache.gora.persistency.StatefulHashMap;
+import org.apache.gora.persistency.impl.StatefulMapWrapper;
 import org.apache.gora.persistency.ListGenericArray;
 
 @SuppressWarnings("all")
@@ -52,7 +52,7 @@ public class WebPage extends PersistentBase {
   public WebPage(StateManager stateManager) {
     super(stateManager);
     parsedContent = new ListGenericArray<Utf8>(getSchema().getField("parsedContent").schema());
-    outlinks = new StatefulHashMap<Utf8,Utf8>();
+    outlinks = new StatefulMapWrapper<Utf8,Utf8>();
   }
   public WebPage newInstance(StateManager stateManager) {
     return new WebPage(stateManager);

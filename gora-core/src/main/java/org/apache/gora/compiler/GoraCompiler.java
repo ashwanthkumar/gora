@@ -361,6 +361,61 @@ public class GoraCompiler {
           }
           i++;
         }
+        
+        line(1, "public static final class Tombstone extends " + type + " implements org.apache.gora.persistency.Tombstone {");
+        
+        // java bean style getters and setters
+        i = 0;
+        for (Field field : schema.getFields()) {
+          String camelKey = camelCasify(field.name());
+          Schema fieldSchema = field.schema();
+          switch (fieldSchema.getType()) {
+          case INT:case LONG:case FLOAT:case DOUBLE:
+          case BOOLEAN:case BYTES:case STRING: case ENUM: case RECORD:
+          case FIXED:
+            String unboxed = unbox(fieldSchema);
+            String fieldType = type(fieldSchema);
+            line(2, "public "+unboxed+" get" +camelKey+"() {");
+            line(3, "return delegate." + unboxed+" get" +camelKey+"();");
+            line(2, "}");
+            line(2, "@Override public void set"+camelKey+"("+unboxed+" value) {");
+            line(3, "throw new java.lang.UnsupportedOperationException(\"Tombstones do not support set operations\");");
+            line(2, "}");
+            break;
+          case ARRAY:
+            unboxed = unbox(fieldSchema.getElementType());
+            fieldType = type(fieldSchema.getElementType());
+            line(2, "public GenericArray<"+fieldType+"> get"+camelKey+"() {");
+            line(3, "return delegate." + unboxed+" get" +camelKey+"();");
+            line(2, "}");
+            line(2, "public void addTo"+camelKey+"("+unboxed+" element) {");
+            line(3, "throw new java.lang.UnsupportedOperationException(\"Tombstones do not support set operations\");");
+            line(2, "}");
+            break;
+          case MAP:
+            unboxed = unbox(fieldSchema.getValueType());
+            fieldType = type(fieldSchema.getValueType());
+            line(2, "public Map<Utf8, "+fieldType+"> get"+camelKey+"() {");
+            line(3, "return (Map<Utf8, "+fieldType+">) get("+i+");");
+            line(2, "}");
+            line(2, "public "+fieldType+" getFrom"+camelKey+"(Utf8 key) {");
+            line(3, "if ("+field.name()+" == null) { return null; }");
+            line(3, "return "+field.name()+".get(key);");
+            line(2, "}");
+            line(2, "public void putTo"+camelKey+"(Utf8 key, "+unboxed+" value) {");
+            line(3, "throw new java.lang.UnsupportedOperationException(\"Tombstones do not support put operations\");");
+            line(2, "}");
+            line(2, "public "+fieldType+" removeFrom"+camelKey+"(Utf8 key) {");
+            line(3, "throw new java.lang.UnsupportedOperationException(\"Tombstones do not support remove operations\");");
+            line(2, "}");
+          }
+          i++;
+        }
+        line(2, "private Tombstone(" + type +" delegate) {this.delegate=delegate;}");
+        line(2, "private final " + type + " delegate;");
+        
+        line(1, "}");
+        
         line(0, "}");
 
         break;

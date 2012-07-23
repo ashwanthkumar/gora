@@ -37,7 +37,7 @@ import org.apache.avro.Schema.Type;
 import org.apache.avro.specific.SpecificFixed;
 import org.apache.avro.util.Utf8;
 import org.apache.gora.persistency.State;
-import org.apache.gora.persistency.StatefulHashMap;
+import org.apache.gora.persistency.impl.StatefulMapWrapper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A StatefulHashMapSerializer translates the byte[] to and from StatefulHashMap of Avro.
  */
-public class StatefulHashMapSerializer<T> extends AbstractSerializer<StatefulHashMap<Utf8, T>> {
+public class StatefulHashMapSerializer<T> extends AbstractSerializer<StatefulMapWrapper<Utf8, T>> {
 
   public static final Logger LOG = LoggerFactory.getLogger(StatefulHashMapSerializer.class);
 
@@ -123,7 +123,7 @@ public class StatefulHashMapSerializer<T> extends AbstractSerializer<StatefulHas
   }
 
   @Override
-  public ByteBuffer toByteBuffer(StatefulHashMap<Utf8, T> map) {
+  public ByteBuffer toByteBuffer(StatefulMapWrapper<Utf8, T> map) {
     if (map == null) {
       return null;
     }
@@ -134,7 +134,7 @@ public class StatefulHashMapSerializer<T> extends AbstractSerializer<StatefulHas
     }
   }
 
-  private ByteBuffer toByteBufferWithFixedLengthElements(StatefulHashMap<Utf8, T> map) {
+  private ByteBuffer toByteBufferWithFixedLengthElements(StatefulMapWrapper<Utf8, T> map) {
     List<byte[]> list = new ArrayList<byte[]>(map.size());
     int n = 0;
     for (Utf8 key : map.keySet()) {
@@ -163,7 +163,7 @@ public class StatefulHashMapSerializer<T> extends AbstractSerializer<StatefulHas
     return byteBuffer;
   }
 
-  private ByteBuffer toByteBufferWithVariableLengthElements(StatefulHashMap<Utf8, T> map) {
+  private ByteBuffer toByteBufferWithVariableLengthElements(StatefulMapWrapper<Utf8, T> map) {
     List<byte[]> list = new ArrayList<byte[]>(map.size());
     int n = 0;
     for (Utf8 key : map.keySet()) {
@@ -190,11 +190,11 @@ public class StatefulHashMapSerializer<T> extends AbstractSerializer<StatefulHas
   }
 
   @Override
-  public StatefulHashMap<Utf8, T> fromByteBuffer(ByteBuffer byteBuffer) {
+  public StatefulMapWrapper<Utf8, T> fromByteBuffer(ByteBuffer byteBuffer) {
     if (byteBuffer == null) {
       return null;
     }
-    StatefulHashMap<Utf8, T> map = new StatefulHashMap<Utf8, T>();
+    StatefulMapWrapper<Utf8, T> map = new StatefulMapWrapper<Utf8, T>();
 int i = 0;
     while (true) {
       Utf8 key = null;

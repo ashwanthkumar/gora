@@ -26,16 +26,16 @@ import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.specific.SpecificRecord;
 import org.apache.gora.avro.PersistentDatumReader;
+import org.apache.gora.persistency.Dirtyable;
 import org.apache.gora.persistency.ListGenericArray;
 import org.apache.gora.persistency.Persistent;
 import org.apache.gora.persistency.StateManager;
-import org.apache.gora.persistency.StatefulHashMap;
 
 /**
  * Base classs implementing common functionality for Persistent
  * classes.
  */
-public abstract class PersistentBase implements Persistent {
+public abstract class PersistentBase implements Persistent, Dirtyable {
 
   protected static Map<Class<?>, Map<String, Integer>> FIELD_MAP =
     new HashMap<Class<?>, Map<String,Integer>>();
@@ -102,8 +102,8 @@ public abstract class PersistentBase implements Persistent {
       switch(fields.get(i).schema().getType()) {
         case MAP: 
           if(get(i) != null) {
-            if (get(i) instanceof StatefulHashMap) {
-              ((StatefulHashMap)get(i)).reuse(); 
+            if (get(i) instanceof StatefulMapWrapper) {
+              ((StatefulMapWrapper)get(i)).reuse(); 
             } else {
               ((Map)get(i)).clear();
             }

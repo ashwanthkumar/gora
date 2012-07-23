@@ -29,7 +29,7 @@ import org.apache.avro.util.Utf8;
 import org.apache.gora.persistency.Persistent;
 import org.apache.gora.persistency.State;
 import org.apache.gora.persistency.StateManager;
-import org.apache.gora.persistency.StatefulMap;
+import org.apache.gora.persistency.StatefulDataStructure;
 import org.apache.gora.util.IOUtils;
 
 /**
@@ -110,7 +110,7 @@ public class PersistentDatumWriter<T extends Persistent>
 
     if (writeDirtyBits) {
       // write extra state information for maps
-      StatefulMap<Utf8, ?> map = (StatefulMap) datum;
+      StatefulDataStructure<Utf8, ?> map = (StatefulDataStructure) datum;
       out.writeInt(map.states().size());
       for (Entry<Utf8, State> e2 : map.states().entrySet()) {
         out.writeString(e2.getKey());

@@ -84,8 +84,8 @@ import org.apache.gora.persistency.ListGenericArray;
 import org.apache.gora.persistency.Persistent;
 import org.apache.gora.persistency.State;
 import org.apache.gora.persistency.StateManager;
-import org.apache.gora.persistency.StatefulHashMap;
-import org.apache.gora.persistency.StatefulMap;
+import org.apache.gora.persistency.StatefulDataStructure;
+import org.apache.gora.persistency.impl.StatefulMapWrapper;
 import org.apache.gora.query.PartitionQuery;
 import org.apache.gora.query.Query;
 import org.apache.gora.query.Result;
@@ -421,7 +421,7 @@ public class AccumuloStore<K,T extends Persistent> extends DataStoreBase<K,T> {
 
       switch (field.schema().getType()) {
         case MAP:
-          currentMap = new StatefulHashMap();
+          currentMap = new StatefulMapWrapper();
           currentPos = field.pos();
           currentFam = entry.getKey().getColumnFamily();
           currentSchema = field.schema().getValueType();
@@ -516,8 +516,8 @@ public class AccumuloStore<K,T extends Persistent> extends DataStoreBase<K,T> {
 
       switch (field.schema().getType()) {
         case MAP:
-          if (o instanceof StatefulMap) {
-            StatefulMap map = (StatefulMap) o;
+          if (o instanceof StatefulDataStructure) {
+            StatefulDataStructure map = (StatefulDataStructure) o;
             Set<?> es = map.states().entrySet();
             for (Object entry : es) {
               Object mapKey = ((Entry) entry).getKey();

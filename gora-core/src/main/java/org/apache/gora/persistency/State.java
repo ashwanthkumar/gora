@@ -21,17 +21,30 @@ package org.apache.gora.persistency;
 /**
  * Persistency state of an object or field.
  */
-public enum State {
+public final class State {
   
-  /** The object is newly loaded */
-  NEW,
-  
-  /** The value of the field has not been changed after loading*/
-  CLEAN,
-  
-  /** The value of the field has been altered*/
-  DIRTY,
-  
+  private State() {}
+
+  /** The value of the field has not been changed after loading */
+  public static final int CLEAN = 0;
+
+  /** The value of the field has been altered */
+  public static final int DIRTY = 1;
+
   /** The object or field is deleted */
-  DELETED
+  public static final int DELETED = 1 << 1;
+
+  /**
+   * The object or field is overwritten, a combination of {@link #DELETED} and
+   * {@link #DIRTY}
+   */
+  public static final int OVERWRITTEN = DIRTY | DELETED;
+
+  public static boolean isDirty(int stateMask) {
+    return (DIRTY & stateMask) != 0;
+  }
+
+  public static boolean isDeleted(int stateMask) {
+    return (DELETED & stateMask) != 0;
+  }
 }

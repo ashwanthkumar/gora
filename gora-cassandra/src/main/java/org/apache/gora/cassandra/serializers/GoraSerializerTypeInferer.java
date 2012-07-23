@@ -37,7 +37,7 @@ import org.apache.avro.generic.GenericArray;
 import org.apache.avro.specific.SpecificFixed;
 import org.apache.avro.util.Utf8;
 
-import org.apache.gora.persistency.StatefulHashMap;
+import org.apache.gora.persistency.impl.StatefulMapWrapper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,8 +81,8 @@ public class GoraSerializerTypeInferer {
         schema = schema.getElementType();
       }
       serializer = GenericArraySerializer.get(schema);
-    } else if (value instanceof StatefulHashMap) {
-      StatefulHashMap map = (StatefulHashMap)value;
+    } else if (value instanceof StatefulMapWrapper) {
+      StatefulMapWrapper map = (StatefulMapWrapper)value;
       if (map.size() == 0) {
         serializer = ByteBufferSerializer.get();
       }

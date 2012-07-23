@@ -40,7 +40,7 @@ import org.apache.avro.util.Utf8;
 import org.apache.gora.cassandra.serializers.GenericArraySerializer;
 import org.apache.gora.cassandra.serializers.StatefulHashMapSerializer;
 import org.apache.gora.cassandra.serializers.TypeUtils;
-import org.apache.gora.persistency.StatefulHashMap;
+import org.apache.gora.persistency.impl.StatefulMapWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,7 +80,7 @@ public class CassandraSubColumn extends CassandraColumn {
       value = genericArray;
     } else if (type == Type.MAP) {
       StatefulHashMapSerializer serializer = StatefulHashMapSerializer.get(fieldSchema.getValueType());
-      StatefulHashMap map = serializer.fromByteBuffer(byteBuffer);
+      StatefulMapWrapper map = serializer.fromByteBuffer(byteBuffer);
       value = map;
     } else {
       value = fromByteBuffer(fieldSchema, byteBuffer);

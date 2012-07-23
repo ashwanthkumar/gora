@@ -22,7 +22,7 @@ import org.apache.avro.specific.SpecificRecord;
 /**
  * Objects that are persisted by Gora implements this interface.
  */
-public interface Persistent extends SpecificRecord, Cloneable {
+public interface Persistent extends SpecificRecord, Cloneable, Deletable {
 
   /**
    * Returns the StateManager which manages the persistent 

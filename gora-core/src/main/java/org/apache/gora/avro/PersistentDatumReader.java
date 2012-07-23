@@ -36,9 +36,9 @@ import org.apache.gora.mapreduce.FakeResolvingDecoder;
 import org.apache.gora.persistency.ListGenericArray;
 import org.apache.gora.persistency.Persistent;
 import org.apache.gora.persistency.State;
-import org.apache.gora.persistency.StatefulHashMap;
-import org.apache.gora.persistency.StatefulMap;
+import org.apache.gora.persistency.StatefulDataStructure;
 import org.apache.gora.persistency.impl.StateManagerImpl;
+import org.apache.gora.persistency.impl.StatefulMapWrapper;
 import org.apache.gora.util.IOUtils;
 
 /**
@@ -168,21 +168,21 @@ public class PersistentDatumReader<T extends Persistent>
   @SuppressWarnings("unchecked")
   protected Object readMap(Object old, Schema expected, ResolvingDecoder in)
       throws IOException {
-    StatefulMap<Utf8, ?> map = (StatefulMap<Utf8, ?>) newMap(old, 0);
-    Map<Utf8, State> tempStates = null;
+    StatefulDataStructure<Utf8> map = (StatefulDataStructure<Utf8>) newMap(old, 0);
+    Map<Utf8, Integer> tempStates = null;
     if (readDirtyBits) {
-      tempStates = new HashMap<Utf8, State>();
+      tempStates = new HashMap<Utf8, Integer>();
       int size = in.readInt();
       for (int j = 0; j < size; j++) {
         Utf8 key = in.readString(null);
-        State state = State.values()[in.readInt()];
+        int state = in.readInt();
         tempStates.put(key, state);
       }
     }
     super.readMap(map, expected, in);
     map.clearStates();
     if (readDirtyBits) {
-      for (Entry<Utf8, State> entry : tempStates.entrySet()) {
+      for (Entry<Utf8, Integer> entry : tempStates.entrySet()) {
         map.putState(entry.getKey(), entry.getValue());
       }
     }
@@ -192,11 +192,11 @@ public class PersistentDatumReader<T extends Persistent>
   @Override
   @SuppressWarnings({ "rawtypes" })
   protected Object newMap(Object old, int size) {
-    if (old instanceof StatefulHashMap) {
-      ((StatefulHashMap)old).reuse();
+    if (old instanceof StatefulMapWrapper) {
+      ((StatefulMapWrapper)old).reuse();
       return old;
     }
-    return new StatefulHashMap<Object, Object>();
+    return new StatefulMapWrapper<Object, Object>();
   }
 
   /** Called to create new array instances.  Subclasses may override to use a

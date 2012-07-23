@@ -49,8 +49,8 @@ import org.apache.gora.persistency.ListGenericArray;
 import org.apache.gora.persistency.Persistent;
 import org.apache.gora.persistency.State;
 import org.apache.gora.persistency.StateManager;
-import org.apache.gora.persistency.StatefulHashMap;
-import org.apache.gora.persistency.StatefulMap;
+import org.apache.gora.persistency.StatefulDataStructure;
+import org.apache.gora.persistency.impl.StatefulMapWrapper;
 import org.apache.gora.query.PartitionQuery;
 import org.apache.gora.query.Query;
 import org.apache.gora.query.impl.PartitionQueryImpl;
@@ -192,8 +192,8 @@ implements Configurable {
       HBaseColumn hcol = mapping.getColumn(field.name());
       switch(type) {
         case MAP:
-          if(o instanceof StatefulMap) {
-            StatefulHashMap<Utf8, ?> map = (StatefulHashMap<Utf8, ?>) o;
+          if(o instanceof StatefulDataStructure) {
+            StatefulMapWrapper<Utf8, ?> map = (StatefulMapWrapper<Utf8, ?>) o;
             for (Entry<Utf8, State> e : map.states().entrySet()) {
               Utf8 mapKey = e.getKey();
               switch (e.getValue()) {
@@ -501,7 +501,7 @@ implements Configurable {
 
   @SuppressWarnings({ "unchecked", "rawtypes" })
   private void setField(T persistent, Field field, Map map) {
-    persistent.put(field.pos(), new StatefulHashMap(map));
+    persistent.put(field.pos(), new StatefulMapWrapper(map));
   }
 
   private void setField(T persistent, Field field, byte[] val)

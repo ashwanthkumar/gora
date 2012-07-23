@@ -33,8 +33,8 @@ import org.apache.avro.generic.GenericArray;
 import org.apache.avro.util.Utf8;
 import org.apache.gora.cassandra.serializers.Utf8Serializer;
 import org.apache.gora.persistency.ListGenericArray;
-import org.apache.gora.persistency.StatefulHashMap;
 import org.apache.gora.persistency.impl.PersistentBase;
+import org.apache.gora.persistency.impl.StatefulMapWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,7 +68,7 @@ public class CassandraSuperColumn extends CassandraColumn {
         
         break;
       case MAP:
-        Map<Utf8, Object> map = new StatefulHashMap<Utf8, Object>();
+        Map<Utf8, Object> map = new StatefulMapWrapper<Utf8, Object>();
         
         for (HColumn<ByteBuffer, ByteBuffer> hColumn : this.hSuperColumn.getColumns()) {
           ByteBuffer memberByteBuffer = hColumn.getValue();

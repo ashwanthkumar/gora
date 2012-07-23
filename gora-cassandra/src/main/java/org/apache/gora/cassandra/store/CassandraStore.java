@@ -51,9 +51,9 @@ import org.apache.gora.cassandra.query.CassandraSubColumn;
 import org.apache.gora.cassandra.query.CassandraSuperColumn;
 import org.apache.gora.persistency.ListGenericArray;
 import org.apache.gora.persistency.Persistent;
-import org.apache.gora.persistency.StatefulHashMap;
 import org.apache.gora.persistency.impl.PersistentBase;
 import org.apache.gora.persistency.impl.StateManagerImpl;
+import org.apache.gora.persistency.impl.StatefulMapWrapper;
 import org.apache.gora.query.PartitionQuery;
 import org.apache.gora.query.Query;
 import org.apache.gora.query.Result;
@@ -352,8 +352,8 @@ public class CassandraStore<K, T extends Persistent> extends DataStoreBase<K, T>
                 if (((GenericArray)memberValue).size() == 0) {
                   continue;
                 }
-              } else if (memberValue instanceof StatefulHashMap<?,?>) {
-                if (((StatefulHashMap)memberValue).size() == 0) {
+              } else if (memberValue instanceof StatefulMapWrapper<?,?>) {
+                if (((StatefulMapWrapper)memberValue).size() == 0) {
                   continue;
                 }
               }
@@ -368,8 +368,8 @@ public class CassandraStore<K, T extends Persistent> extends DataStoreBase<K, T>
         break;
       case MAP:
         if (value != null) {
-          if (value instanceof StatefulHashMap<?, ?>) {
-            this.cassandraClient.addStatefulHashMap(key, field.name(), (StatefulHashMap<Utf8,Object>)value);
+          if (value instanceof StatefulMapWrapper<?, ?>) {
+            this.cassandraClient.addStatefulHashMap(key, field.name(), (StatefulMapWrapper<Utf8,Object>)value);
           } else {
             LOG.info("Map not supported: " + value.toString());
           }
