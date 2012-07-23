@@ -6,6 +6,16 @@ Gora Change Log
 
 0.3 (trunk) Current Development:
 
+* GORA-157 gora-cassandra test failure - proposal to skip 10 test cases for a while (kazk)
+
+* GORA-156 Properly implement getSchemaName in CassandraStore (lewismc)
+
+* GORA-153 gora-cassandra does not correctly handle DELETED State for MAP (kazk)
+
+* GORA-152 gora-core test incorrectly uses ByteBuffer's array() method to get its byte array (kazk)
+
+* GORA-151 CassandraStore's schemaExists() method always returns false (kazk)
+
 * GORA-150 Introduce Configuration property preferred.schema.name (ferdy)
 
 * GORA-142 Creates org.apache.gora.cassandra.serializers package in order to clean the code of store and query packages and to support additional types in future. (kazk)

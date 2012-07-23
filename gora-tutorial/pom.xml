@@ -86,30 +86,103 @@
                         <configuration>
                             <sources>
                                 <source>src/examples/java</source>
+                                <sources>target/generated-sources/gora</sources>
                             </sources>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
+<!--             <plugin> -->
+<!--                 <groupId>org.apache.maven.plugins</groupId> -->
+<!--                 <artifactId>maven-jar-plugin</artifactId> -->
+<!--                 <version>${maven-jar-plugin.version}</version> -->
+<!--                 <executions> -->
+<!--                     <execution> -->
+<!--                         <goals> -->
+<!--                             <goal>jar</goal> -->
+<!--                             <goal>test-jar</goal> -->
+<!--                         </goals> -->
+<!--                         <configuration> -->
+<!--                         <archive> -->
+<!--                             <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile> -->
+<!--                         </archive> -->
+<!--                     </configuration> -->
+<!--                     </execution> -->
+<!--                 </executions> -->
+<!--             </plugin> -->
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>${maven-jar-plugin.version}</version>
+                <artifactId>maven-antrun-plugin</artifactId>
                 <executions>
                     <execution>
+                        <phase>initialize</phase>
                         <goals>
-                            <goal>jar</goal>
-                            <goal>test-jar</goal>
+                            <goal>run</goal>
                         </goals>
                         <configuration>
-                        <archive>
-                            <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
-                        </archive>
-                    </configuration>
+                            <target>
+                                <mkdir dir="${project.build.directory}/generated-sources/gora"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <classpathScope>compile</classpathScope>
+                            <mainClass>org.apache.gora.compiler.cli.GoraCompilerCLI</mainClass>
+                            <arguments>
+                                <argument>${basedir}/src/main/avro/metricdatum.json</argument>
+                                <argument>${basedir}/src/main/avro/pageview.json</argument>
+                                <argument>${project.build.directory}/generated-sources/gora</argument>
+                            </arguments>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
         </plugins>
+        <pluginManagement>
+            <plugins>
+                <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+                <plugin>
+                    <groupId>org.eclipse.m2e</groupId>
+                    <artifactId>lifecycle-mapping</artifactId>
+                    <version>1.0.0</version>
+                    <configuration>
+                        <lifecycleMappingMetadata>
+                            <pluginExecutions>
+                                <pluginExecution>
+                                    <pluginExecutionFilter>
+                                        <groupId>
+                                            org.codehaus.mojo
+                                        </groupId>
+                                        <artifactId>
+                                            exec-maven-plugin
+                                        </artifactId>
+                                        <versionRange>
+                                            [1.2,)
+                                        </versionRange>
+                                        <goals>
+                                            <goal>java</goal>
+                                        </goals>
+                                    </pluginExecutionFilter>
+                                    <action>
+                                        <ignore></ignore>
+                                    </action>
+                                </pluginExecution>
+                            </pluginExecutions>
+                        </lifecycleMappingMetadata>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
     </build>
 
     <dependencies>
@@ -132,6 +205,12 @@
         <dependency>
             <groupId>org.apache.gora</groupId>
             <artifactId>gora-sql</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.apache.gora</groupId>
+            <artifactId>gora-compiler-cli</artifactId>
+            <scope>provided</scope>
         </dependency>
 
 		<!-- Hadoop Dependencies -->

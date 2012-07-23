@@ -7,9 +7,9 @@
 		<version>0.3-SNAPSHOT</version>
 	</parent>
 	<artifactId>gora-compiler</artifactId>
-	<name>Gora Compiler</name>
+	<name>Apache Gora :: Compiler</name>
 	<description>The Gora compiler.</description>
-	<packaging>jar</packaging>
+	<packaging>bundle</packaging>
 	<build>
 		<resources>
 			<resource>

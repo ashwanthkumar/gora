@@ -92,6 +92,14 @@ public class CassandraClient<K, T extends Persistent> {
     this.keySerializer = GoraSerializerTypeInferer.getSerializer(keyClass);
     this.mutator = HFactory.createMutator(this.keyspace, this.keySerializer);
   }
+
+  /**
+   * Check if keyspace already exists.
+   */
+  public boolean keyspaceExists() {
+    KeyspaceDefinition keyspaceDefinition = this.cluster.describeKeyspace(this.cassandraMapping.getKeyspaceName());
+    return (keyspaceDefinition != null);
+  }
   
   /**
    * Check if keyspace already exists. If not, create it.
@@ -186,6 +194,26 @@ public class CassandraClient<K, T extends Persistent> {
 
   public void addSubColumn(K key, String fieldName, Integer columnName, Object value) {
     addSubColumn(key, fieldName, IntegerSerializer.get().toByteBuffer(columnName), value);
+  }
+
+
+  /**
+   * Delete a member in a super column. This is used for map and record Avro types.
+   * @param key the row key
+   * @param fieldName the field name
+   * @param columnName the column name (the member name, or the index of array)
+   */
+  @SuppressWarnings("unchecked")
+  public void deleteSubColumn(K key, String fieldName, ByteBuffer columnName) {
+
+    String columnFamily = this.cassandraMapping.getFamily(fieldName);
+    String superColumnName = this.cassandraMapping.getColumn(fieldName);
+    
+    HectorUtils.deleteSubColumn(mutator, key, columnFamily, superColumnName, columnName);
+  }
+
+  public void deleteSubColumn(K key, String fieldName, String columnName) {
+    deleteSubColumn(key, fieldName, StringSerializer.get().toByteBuffer(columnName));
   }
 
 
@@ -370,5 +398,13 @@ public class CassandraClient<K, T extends Persistent> {
     return orderedRows.getList();
 
 
+  }
+
+  /**
+   * Obtain Schema/Keyspace name
+   * @return Keyspace
+   */
+  public String getKeyspaceName() {
+	return this.cassandraMapping.getKeyspaceName();
   }
 }

@@ -19,8 +19,13 @@ public class GoraCompilerCLI {
 			System.exit(1);
 		}
 		File outputDir = new File(args[args.length-1]);
+		if(!outputDir.exists()){
+      System.err.println("Output directory " + outputDir + " must exist.");
+      printHelp();
+      System.exit(1);
+    }
 		if(!outputDir.isDirectory()){
-			System.err.println("Must supply a directory for output.");
+			System.err.println("Must supply a directory for output." + outputDir + " is not a directory.");
 			printHelp();
 			System.exit(1);
 		}

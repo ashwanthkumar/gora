@@ -294,7 +294,7 @@ public class DataStoreTestUtil {
 
     for (int i = 0; i < urls.length; i++) {
       WebPage webPage = dataStore.get(urls[i]);
-      Assert.assertEquals(content + i, ByteUtils.toString(webPage.getContent().array()));
+      Assert.assertEquals(content + i, ByteUtils.toString( toByteArray(webPage.getContent()) ));
       Assert.assertEquals(10, webPage.getParsedContent().size());
       int j = 0;
       for (CharSequence pc : webPage.getParsedContent()) {
@@ -337,9 +337,9 @@ public class DataStoreTestUtil {
     Assert.assertNotNull(page);
 
     Assert.assertEquals(URLS[i], page.getUrl().toString());
-    Assert.assertTrue("content error:" + new String(page.getContent().array()) +
+    Assert.assertTrue("content error:" + new String( toByteArray(page.getContent()) ) +
         " actual=" + CONTENTS[i] + " i=" + i
-    , Arrays.equals(page.getContent().array()
+    , Arrays.equals( toByteArray(page.getContent() )
         , CONTENTS[i].getBytes()));
 
     List<CharSequence> parsedContent = page.getParsedContent();
@@ -719,4 +719,15 @@ public class DataStoreTestUtil {
     }
 
   }
+
+  private static byte[] toByteArray(ByteBuffer buffer) {
+    int p = buffer.position();
+    int n = buffer.limit() - p;
+    byte[] bytes = new byte[n];
+    for (int i = 0; i < n; i++) {
+      bytes[i] = buffer.get(p++);
+    }
+    return bytes;
+  }
+
 }

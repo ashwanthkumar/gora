@@ -7,7 +7,7 @@
 		<version>0.3-SNAPSHOT</version>
 	</parent>
 	<artifactId>gora-compiler-cli</artifactId>
-	<name>Gora Compiler CLI</name>
+	<name>Apache Gora :: Compiler CLI</name>
 	<description>A command line runner for the Gora compiler.</description>
 	<dependencies>
 		<dependency>

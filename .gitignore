@@ -37,3 +37,6 @@ gora-cassandra/bin/
 gora-core/bin/
 gora-hbase/bin/
 gora-sql/bin/
+gora-compiler/bin
+gora-tutorial/bin
+gora-compiler-cli/bin

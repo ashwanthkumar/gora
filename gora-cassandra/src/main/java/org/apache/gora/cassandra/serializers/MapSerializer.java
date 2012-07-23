@@ -136,6 +136,7 @@ public class MapSerializer<T> extends AbstractSerializer<Map<CharSequence, T>> {
       T value = map.get(key);
       byte[] bytes = BytesArraySerializer.get().fromByteBuffer(CharSequenceSerializer.get().toByteBuffer(key));
       list.add(bytes);
+      n += 4;
       n += bytes.length;
       bytes = BytesArraySerializer.get().fromByteBuffer(valueSerializer.toByteBuffer(value));
       list.add(bytes);
@@ -162,9 +163,11 @@ public class MapSerializer<T> extends AbstractSerializer<Map<CharSequence, T>> {
       T value = map.get(key);
       byte[] bytes = BytesArraySerializer.get().fromByteBuffer(CharSequenceSerializer.get().toByteBuffer(key));
       list.add(bytes);
+      n += 4;
       n += bytes.length;
       bytes = BytesArraySerializer.get().fromByteBuffer(valueSerializer.toByteBuffer(value));
       list.add(bytes);
+      n += 4;
       n += bytes.length;
     }
     ByteBuffer byteBuffer = ByteBuffer.allocate(n);

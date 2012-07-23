@@ -18,6 +18,7 @@
 package org.apache.gora.persistency.impl;
 
 import java.nio.ByteBuffer;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.avro.Schema.Field;
@@ -176,24 +177,16 @@ public abstract class PersistentBase extends SpecificRecordBase implements
 
   @Override
   public void clear() {
+    Collection<Field> unmanagedFields = getUnmanagedFields();
     for (Field field : getSchema().getFields()) {
-      if (field.pos() == 0)
+      if (!unmanagedFields.contains(field))
         continue;
-      switch (field.schema().getType()) {
       /*
        * TODO: Its more in the spirit of Gora's clear method to actually clear
        * data structures, but since avro no-longer defaults to having empty
        * structures the way to do this consistently would be complicated.
        */
-      case MAP:
-      case ARRAY:
-      case STRING:
-      case BYTES:
-      case UNION:
-      case RECORD:
-        put(field.pos(), null);
-        break;
-      }
+      put(field.pos(), null);
     }
     clearDirty();
   }
